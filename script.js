@@ -3,6 +3,21 @@ let currentMonth = 9;
 
 let transactions = [];
 
+// ==============================
+// 分類リスト
+// ==============================
+
+let categories = JSON.parse(
+  localStorage.getItem("clubFeeCategories")
+) || [
+  "部費",
+  "大会費",
+  "備品",
+  "交通費",
+  "施設費",
+  "その他"
+];
+
 
 // ==============================
 // 月表示
@@ -126,14 +141,30 @@ function renderTransactions() {
         >
       </td>
 
-      <td>
-        <input
-          type="text"
-          placeholder="分類"
-          value="${transaction.category}"
-          onchange="updateTransaction(${transaction.id}, 'category', this.value)"
+<td>
+
+  <select
+    onchange="updateTransaction(${transaction.id}, 'category', this.value)"
+  >
+
+    <option value="">選択してください</option>
+
+    ${categories.map(function(category) {
+
+      return `
+        <option
+          value="${category}"
+          ${transaction.category === category ? "selected" : ""}
         >
-      </td>
+          ${category}
+        </option>
+      `;
+
+    }).join("")}
+
+  </select>
+
+</td>
 
       <td>
         <input
@@ -322,3 +353,152 @@ function exportPDF() {
 updateMonthTitle();
 
 loadMonth();
+
+// ==============================
+// 分類管理画面
+// ==============================
+
+document.getElementById("manageCategoryButton")
+  .addEventListener("click", function () {
+
+    const area =
+      document.getElementById("categoryManagement");
+
+    if (area.style.display === "none") {
+
+      area.style.display = "block";
+
+      renderCategoryList();
+
+    } else {
+
+      area.style.display = "none";
+
+    }
+
+  });
+
+
+// ==============================
+// 分類追加
+// ==============================
+
+document.getElementById("addCategoryButton")
+  .addEventListener("click", function () {
+
+    const name =
+      prompt("追加する分類名を入力してください。");
+
+    if (!name) {
+      return;
+    }
+
+    const category =
+      name.trim();
+
+    if (!category) {
+      return;
+    }
+
+    if (categories.includes(category)) {
+
+      alert("その分類はすでに登録されています。");
+
+      return;
+
+    }
+
+    categories.push(category);
+
+    saveCategories();
+
+    renderCategoryList();
+
+    renderTransactions();
+
+  });
+
+
+// ==============================
+// 分類削除
+// ==============================
+
+function deleteCategory(category) {
+
+  const result =
+    confirm(
+      `「${category}」を分類リストから削除しますか？`
+    );
+
+  if (!result) {
+    return;
+  }
+
+  categories =
+    categories.filter(function(item) {
+
+      return item !== category;
+
+    });
+
+  saveCategories();
+
+  renderCategoryList();
+
+  renderTransactions();
+
+}
+
+
+// ==============================
+// 分類保存
+// ==============================
+
+function saveCategories() {
+
+  localStorage.setItem(
+    "clubFeeCategories",
+    JSON.stringify(categories)
+  );
+
+}
+
+
+// ==============================
+// 分類一覧表示
+// ==============================
+
+function renderCategoryList() {
+
+  const list =
+    document.getElementById("categoryList");
+
+  list.innerHTML = "";
+
+  categories.forEach(function(category) {
+
+    const div =
+      document.createElement("div");
+
+    div.style.marginBottom = "8px";
+
+    div.innerHTML = `
+
+      <span>
+        ${category}
+      </span>
+
+      <button
+        onclick="deleteCategory('${category}')"
+        style="margin-left:10px;"
+      >
+        削除
+      </button>
+
+    `;
+
+    list.appendChild(div);
+
+  });
+
+}
