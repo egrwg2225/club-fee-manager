@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>部費管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>部費管理</h1>
+</header>
+
+<main>
+
+  <section class="month-area">
+
+    <button id="prevMonth">‹</button>
+
+    <h2 id="monthTitle">2026年9月</h2>
+
+    <button id="nextMonth">›</button>
+
+  </section>
+
+
+  <section class="balance-card">
+
+    <div class="balance-item">
+      <span>前月繰越</span>
+      <strong id="carryOver">0円</strong>
+    </div>
+
+    <div class="balance-item income">
+      <span>収入合計</span>
+      <strong id="incomeTotal">0円</strong>
+    </div>
+
+    <div class="balance-item expense">
+      <span>支出合計</span>
+      <strong id="expenseTotal">0円</strong>
+    </div>
+
+    <div class="balance-item total">
+      <span>今月残高</span>
+      <strong id="currentBalance">0円</strong>
+    </div>
+
+  </section>
+
+
+  <section class="menu">
+
+    <button onclick="showIncomeExpense()">
+      収支入力
+    </button>
+
+    <button onclick="showMembers()">
+      部費管理
+    </button>
+
+    <button onclick="showSummary()">
+      月別集計
+    </button>
+
+    <button onclick="exportPDF()">
+      A4 PDF出力
+    </button>
+
+  </section>
+
+
+  <section id="incomeExpenseSection">
+
+    <h2>収支入力</h2>
+
+    <button id="addRowButton">
+      ＋ 収支を追加
+    </button>
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>日付</th>
+            <th>分類</th>
+            <th>内訳</th>
+            <th>収入</th>
+            <th>支出</th>
+            <th>メモ</th>
+            <th></th>
+          </tr>
+
+        </thead>
+
+        <tbody id="transactionTable">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+
+</body>
+</html>
