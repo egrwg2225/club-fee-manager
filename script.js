@@ -15,16 +15,37 @@ let transactions = [];
 // 分類リスト
 // ==============================
 
-let categories = JSON.parse(
-  localStorage.getItem("clubFeeCategories")
-) || [
-  "部費",
-  "大会費",
-  "備品",
-  "交通費",
-  "施設費",
-  "その他"
-];
+let categories = [];
+
+// ==============================
+// Supabaseから分類を読み込む
+// ==============================
+
+async function loadCategories() {
+
+  const { data, error } = await supabaseClient
+    .from("categories")
+    .select("id, name")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+
+    console.error("分類の読み込みに失敗しました:", error);
+
+    alert("分類の読み込みに失敗しました。");
+
+    return;
+
+  }
+
+  categories = data.map(function(item) {
+    return item.name;
+  });
+
+  renderCategoryList();
+  renderTransactions();
+
+}
 
 
 // ==============================
@@ -510,3 +531,4 @@ function renderCategoryList() {
   });
 
 }
+loadCategories();
