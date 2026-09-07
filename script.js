@@ -25,7 +25,7 @@ async function loadCategories() {
 
   const { data, error } = await supabaseClient
     .from("categories")
-    .select("name")
+    .select("namename")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -39,7 +39,7 @@ async function loadCategories() {
   }
 
   categories = data.map(function(item) {
-    return item.name;
+    return item.namename;
   });
 
   renderCategoryList();
