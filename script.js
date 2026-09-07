@@ -6,6 +6,48 @@ const supabaseClient = supabase.createClient(
   SUPABASE_KEY
 );
 
+// ==============================
+// ログイン処理
+// ==============================
+
+document.getElementById("loginButton")
+  .addEventListener("click", async function () {
+
+    const email =
+      document.getElementById("loginEmail").value;
+
+    const password =
+      document.getElementById("loginPassword").value;
+
+    const message =
+      document.getElementById("loginMessage");
+
+    message.textContent = "ログイン中...";
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+
+      console.error(error);
+
+      message.textContent =
+        "ログインに失敗しました: " + error.message;
+
+      return;
+
+    }
+
+    message.textContent =
+      "ログインしました！";
+
+    console.log("ログインユーザー:", data.user);
+
+  });
+
 let currentYear = 2026;
 let currentMonth = 9;
 
