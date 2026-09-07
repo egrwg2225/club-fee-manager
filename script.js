@@ -1,3 +1,11 @@
+const SUPABASE_URL = "https://ixyqbkraeexygmacooqq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_-LRZicRjb1NNTqFOKwH5zQ_uzinwx2J";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 let currentYear = 2026;
 let currentMonth = 9;
 
