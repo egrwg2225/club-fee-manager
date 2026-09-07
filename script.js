@@ -32,7 +32,7 @@ async function loadCategories() {
 
     console.error("分類の読み込みに失敗しました:", error);
 
-    alert("分類の読み込みに失敗しました。");
+    alert("分類の読み込みに失敗しました。\n" + error.message);
 
     return;
 
