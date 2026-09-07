@@ -25,7 +25,7 @@ async function loadCategories() {
 
   const { data, error } = await supabaseClient
     .from("categories")
-    .select("id, name")
+    .select("name")
     .order("created_at", { ascending: true });
 
   if (error) {
