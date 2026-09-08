@@ -7,6 +7,50 @@ const supabaseClient = supabase.createClient(
 );
 
 // ==============================
+// ユーザー権限
+// ==============================
+
+let currentUser = null;
+let currentRole = null;
+
+async function loadUserRole() {
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  currentUser = user;
+
+  const { data, error } =
+    await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+  if (error) {
+
+    console.error("権限の取得に失敗しました:", error);
+
+    alert(
+      "ユーザー権限の取得に失敗しました。\n" +
+      error.message
+    );
+
+    return;
+  }
+
+  currentRole = data.role;
+
+  console.log("現在の権限:", currentRole);
+
+}
+
+// ==============================
 // ログイン処理
 // ==============================
 
@@ -591,3 +635,5 @@ function renderCategoryList() {
 
 }
 loadCategories();
+
+loadUserRole();
