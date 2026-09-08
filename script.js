@@ -510,7 +510,7 @@ document.getElementById("addCategoryButton")
 // 分類削除
 // ==============================
 
-function deleteCategory(category) {
+async function deleteCategory(category) {
 
   const result =
     confirm(
@@ -521,18 +521,28 @@ function deleteCategory(category) {
     return;
   }
 
-  categories =
-    categories.filter(function(item) {
+  const { error } =
+    await supabaseClient
+      .from("categories")
+      .delete()
+      .eq("namemename", category);
 
-      return item !== category;
+  if (error) {
 
-    });
+    console.error("分類削除エラー:", error);
 
-  saveCategories();
+    alert(
+      "分類の削除に失敗しました。\n" +
+      error.message
+    );
 
-  renderCategoryList();
+    return;
 
-  renderTransactions();
+  }
+
+  await loadCategories();
+
+  alert("分類を削除しました。");
 
 }
 
