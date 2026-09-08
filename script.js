@@ -455,7 +455,7 @@ document.getElementById("manageCategoryButton")
 // ==============================
 
 document.getElementById("addCategoryButton")
-  .addEventListener("click", function () {
+  .addEventListener("click", async function () {
 
     const name =
       prompt("追加する分類名を入力してください。");
@@ -479,13 +479,29 @@ document.getElementById("addCategoryButton")
 
     }
 
-    categories.push(category);
+    const { error } =
+      await supabaseClient
+        .from("categories")
+        .insert({
+          namemename: category
+        });
 
-    saveCategories();
+    if (error) {
 
-    renderCategoryList();
+      console.error("分類追加エラー:", error);
 
-    renderTransactions();
+      alert(
+        "分類の追加に失敗しました。\n" +
+        error.message
+      );
+
+      return;
+
+    }
+
+    await loadCategories();
+
+    alert("分類を追加しました。");
 
   });
 
