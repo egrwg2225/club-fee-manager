@@ -47,7 +47,24 @@ async function loadUserRole() {
   currentRole = data.role;
 
   console.log("現在の権限:", currentRole);
+const roleElement =
+  document.getElementById("userRole");
 
+if (roleElement) {
+
+  if (currentRole === "editor") {
+
+    roleElement.textContent =
+      "権限：編集者";
+
+  } else if (currentRole === "viewer") {
+
+    roleElement.textContent =
+      "権限：閲覧者";
+
+  }
+
+}
 }
 
 // ==============================
