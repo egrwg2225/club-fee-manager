@@ -246,11 +246,13 @@ function updateEditorUI() {
 // 収支1行追加
 // ==============================
 
-function addTransaction() {
+async function addTransaction() {
+
+  if (currentRole !== "editor") {
+    return;
+  }
 
   const transaction = {
-
-    id: Date.now(),
 
     date:
       `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`,
@@ -259,22 +261,59 @@ function addTransaction() {
 
     detail: "",
 
-    income: "",
+    income: 0,
 
-    expense: "",
+    expense: 0,
 
-    memo: ""
+    memo: "",
+
+    year_month:
+      `${currentYear}-${String(currentMonth).padStart(2, "0")}`
 
   };
 
-  transactions.push(transaction);
+  const { data, error } =
+    await supabaseClient
+      .from("transactions")
+      .insert(transaction)
+      .select()
+      .single();
+
+  if (error) {
+
+    console.error("収支追加エラー:", error);
+
+    alert(
+      "収支の追加に失敗しました。\n" +
+      error.message
+    );
+
+    return;
+  }
+
+  transactions.push({
+
+    id: data.idansactions,
+
+    date: data.date,
+
+    category: data.category,
+
+    detail: data.detail,
+
+    income: data.income,
+
+    expense: data.expense,
+
+    memo: data.memo
+
+  });
 
   renderTransactions();
 
   calculateTotals();
 
 }
-
 
 // ==============================
 // 収支一覧表示
