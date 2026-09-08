@@ -290,15 +290,16 @@ function renderTransactions() {
   transactions.forEach(function (transaction) {
 
     const tr = document.createElement("tr");
-
+　　const isViewer = currentRole !== "editor";
     tr.innerHTML = `
 
       <td>
-        <input
-          type="date"
-          value="${transaction.date}"
-          onchange="updateTransaction(${transaction.id}, 'date', this.value)"
-        >
+       <input
+  type="date"
+  value="${transaction.date}"
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'date', this.value)"
+>
       </td>
 
 <td>
