@@ -211,6 +211,10 @@ document.getElementById("nextMonth").addEventListener("click", function () {
 
 document.getElementById("addRowButton").addEventListener("click", function () {
 
+  if (currentRole !== "editor") {
+    return;
+  }
+
   addTransaction();
 
 });
