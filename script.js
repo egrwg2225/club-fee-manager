@@ -551,15 +551,6 @@ async function deleteCategory(category) {
 // 分類保存
 // ==============================
 
-function saveCategories() {
-
-  localStorage.setItem(
-    "clubFeeCategories",
-    JSON.stringify(categories)
-  );
-
-}
-
 
 // ==============================
 // 分類一覧表示
