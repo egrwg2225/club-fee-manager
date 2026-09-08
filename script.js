@@ -107,6 +107,8 @@ document.getElementById("loginButton")
 
     console.log("ログインユーザー:", data.user);
 
+
+await loadUserRole();
   });
 
 let currentYear = 2026;
