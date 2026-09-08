@@ -305,8 +305,9 @@ function renderTransactions() {
 <td>
 
   <select
-    onchange="updateTransaction(${transaction.id}, 'category', this.value)"
-  >
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'category', this.value)"
+>
 
     <option value="">選択してください</option>
 
@@ -329,38 +330,42 @@ function renderTransactions() {
 
       <td>
         <input
-          type="text"
-          placeholder="内訳"
-          value="${transaction.detail}"
-          onchange="updateTransaction(${transaction.id}, 'detail', this.value)"
-        >
+  type="text"
+  placeholder="内訳"
+  value="${transaction.detail}"
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'detail', this.value)"
+>
       </td>
 
       <td>
         <input
-          type="number"
-          placeholder="0"
-          value="${transaction.income}"
-          onchange="updateTransaction(${transaction.id}, 'income', this.value)"
-        >
+  type="number"
+  placeholder="0"
+  value="${transaction.income}"
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'income', this.value)"
+>
       </td>
 
       <td>
         <input
-          type="number"
-          placeholder="0"
-          value="${transaction.expense}"
-          onchange="updateTransaction(${transaction.id}, 'expense', this.value)"
-        >
+  type="number"
+  placeholder="0"
+  value="${transaction.expense}"
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'expense', this.value)"
+>
       </td>
 
       <td>
         <input
-          type="text"
-          placeholder="メモ"
-          value="${transaction.memo}"
-          onchange="updateTransaction(${transaction.id}, 'memo', this.value)"
-        >
+  type="text"
+  placeholder="メモ"
+  value="${transaction.memo}"
+  ${isViewer ? "disabled" : ""}
+  onchange="updateTransaction(${transaction.id}, 'memo', this.value)"
+>
       </td>
 
       <td>
