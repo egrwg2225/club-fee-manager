@@ -46,6 +46,8 @@ async function loadUserRole() {
 
   currentRole = data.role;
 
+  updateEditorUI();
+
   console.log("現在の権限:", currentRole);
 const roleElement =
   document.getElementById("userRole");
@@ -219,6 +221,26 @@ document.getElementById("addRowButton").addEventListener("click", function () {
 
 });
 
+function updateEditorUI() {
+
+  const addButton =
+    document.getElementById("addRowButton");
+
+  if (!addButton) {
+    return;
+  }
+
+  if (currentRole === "editor") {
+
+    addButton.style.display = "inline-block";
+
+  } else {
+
+    addButton.style.display = "none";
+
+  }
+
+}
 
 // ==============================
 // 収支1行追加
