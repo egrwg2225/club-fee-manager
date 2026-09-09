@@ -248,7 +248,10 @@ function updateEditorUI() {
 
 async function addTransaction() {
 
+  alert("収支追加処理が開始されました");
+
   if (currentRole !== "editor") {
+    alert("編集者ではありません");
     return;
   }
 
