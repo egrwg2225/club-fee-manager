@@ -213,7 +213,10 @@ document.getElementById("nextMonth").addEventListener("click", function () {
 
 document.getElementById("addRowButton").addEventListener("click", function () {
 
+  alert("＋収支を追加ボタンが押されました");
+
   if (currentRole !== "editor") {
+    alert("編集者ではありません");
     return;
   }
 
