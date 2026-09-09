@@ -23,7 +23,15 @@ async function loadUserRole() {
     return;
   }
 
-  currentUser = user;
+currentUser = user;
+
+const loginSection =
+  document.getElementById("loginSection");
+
+if (loginSection) {
+  loginSection.style.display = "none";
+}
+
 const appContent =
   document.getElementById("appContent");
 
@@ -111,7 +119,9 @@ document.getElementById("loginButton")
 
     message.textContent =
       "ログインしました！";
+document.getElementById("loginSection").style.display = "none";
 
+document.getElementById("appContent").style.display = "block";
     console.log("ログインユーザー:", data.user);
 
 
