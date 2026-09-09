@@ -31,7 +31,7 @@ const loginSection =
 if (loginSection) {
   loginSection.style.display = "none";
 }
-
+alert("ログイン画面を隠す処理が実行されました");
 const appContent =
   document.getElementById("appContent");
 
