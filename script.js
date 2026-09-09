@@ -24,7 +24,12 @@ async function loadUserRole() {
   }
 
   currentUser = user;
+const appContent =
+  document.getElementById("appContent");
 
+if (appContent) {
+  appContent.style.display = "block";
+}
   const { data, error } =
     await supabaseClient
       .from("user_roles")
