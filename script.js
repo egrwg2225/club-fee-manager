@@ -31,7 +31,7 @@ const loginSection =
 if (loginSection) {
   loginSection.style.display = "none";
 }
-alert("ログイン画面を隠す処理が実行されました");
+
 const appContent =
   document.getElementById("appContent");
 
@@ -228,7 +228,7 @@ document.getElementById("nextMonth").addEventListener("click", function () {
 
 document.getElementById("addRowButton").addEventListener("click", function () {
 
-  alert("＋収支を追加ボタンが押されました");
+  
 
   if (currentRole !== "editor") {
     alert("編集者ではありません");
@@ -266,7 +266,7 @@ function updateEditorUI() {
 
 async function addTransaction() {
 
-  alert("収支追加処理が開始されました");
+  
 
   if (currentRole !== "editor") {
     alert("編集者ではありません");
