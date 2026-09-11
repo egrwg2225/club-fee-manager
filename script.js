@@ -2,14 +2,17 @@
 // Supabase設定
 // ==============================
 
-const SUPABASE_URL = "https://ixyqbkraeexygmacooqq.supabase.co";
+const SUPABASE_URL =
+  "https://ixyqbkraeexygmacooqq.supabase.co";
 
-const SUPABASE_KEY = "sb_publishable_-LRZicRjb1NNTqFOKwH5zQ_uzinwx2J";
+const SUPABASE_KEY =
+  "sb_publishable_-LRZicRjb1NNTqFOKwH5zQ_uzinwx2J";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
 
 // ==============================
@@ -29,30 +32,42 @@ let members = [];
 let memberFees = [];
 
 
+// 月読み込みの競合防止
+let monthLoadNumber = 0;
+
+
 // ==============================
 // 初期処理
 // ==============================
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
 
-  updateMonthTitle();
+    updateMonthTitle();
 
-  const {
-    data: { session }
-  } = await supabaseClient.auth.getSession();
+    const {
+      data: { session }
+    } = await supabaseClient.auth.getSession();
 
-  if (session) {
-    currentUser = session.user;
-    await loadUserRole();
+    if (session) {
+
+      currentUser = session.user;
+
+      await loadUserRole();
+
+    }
+
+    setupLoginButton();
+    setupMonthButtons();
+    setupAddRowButton();
+    setupCategoryManagement();
+    setupMemberManagement();
+
+    setupAutoMemberFeeIncome();
+
   }
-
-  setupLoginButton();
-  setupMonthButtons();
-  setupAddRowButton();
-  setupCategoryManagement();
-  setupMemberManagement();
-
-});
+);
 
 
 // ==============================
@@ -61,11 +76,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function setupLoginButton() {
 
-  const button = document.getElementById("loginButton");
+  const button =
+    document.getElementById("loginButton");
 
   if (!button) return;
 
-  button.addEventListener("click", login);
+  button.addEventListener(
+    "click",
+    login
+  );
 
 }
 
@@ -73,13 +92,21 @@ function setupLoginButton() {
 async function login() {
 
   const email =
-    document.getElementById("loginEmail").value.trim();
+    document
+      .getElementById("loginEmail")
+      .value
+      .trim();
 
   const password =
-    document.getElementById("loginPassword").value;
+    document
+      .getElementById("loginPassword")
+      .value;
 
   const message =
-    document.getElementById("loginMessage");
+    document.getElementById(
+      "loginMessage"
+    );
+
 
   if (!email || !password) {
 
@@ -87,15 +114,21 @@ async function login() {
       "メールアドレスとパスワードを入力してください。";
 
     return;
+
   }
 
-  message.textContent = "ログイン中…";
+
+  message.textContent =
+    "ログイン中…";
+
 
   const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
+    await supabaseClient.auth
+      .signInWithPassword({
+        email,
+        password
+      });
+
 
   if (error) {
 
@@ -105,7 +138,9 @@ async function login() {
       "ログインできませんでした。";
 
     return;
+
   }
+
 
   currentUser = data.user;
 
@@ -122,38 +157,62 @@ async function loadUserRole() {
 
   if (!currentUser) return;
 
+
   const { data, error } =
     await supabaseClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", currentUser.id)
+      .eq(
+        "user_id",
+        currentUser.id
+      )
       .maybeSingle();
+
 
   if (error) {
 
     console.error(error);
 
     return;
+
   }
 
-  currentRole = data?.role || "viewer";
+
+  currentRole =
+    data?.role || "viewer";
+
 
   const loginSection =
-    document.getElementById("loginSection");
+    document.getElementById(
+      "loginSection"
+    );
 
   const appContent =
-    document.getElementById("appContent");
+    document.getElementById(
+      "appContent"
+    );
 
   const userRole =
-    document.getElementById("userRole");
+    document.getElementById(
+      "userRole"
+    );
+
 
   if (loginSection) {
-    loginSection.style.display = "none";
+
+    loginSection.style.display =
+      "none";
+
   }
 
+
   if (appContent) {
-    appContent.style.display = "block";
+
+    appContent.style.display =
+      "block";
+
   }
+
 
   if (userRole) {
 
@@ -161,7 +220,9 @@ async function loadUserRole() {
       currentRole === "editor"
         ? "編集者"
         : "閲覧者";
+
   }
+
 
   await loadCategories();
   await loadMonth();
@@ -182,61 +243,159 @@ function isEditor() {
 
 
 // ==============================
+// 部費自動収入設定
+// ==============================
+
+function setupAutoMemberFeeIncome() {
+
+  const checkbox =
+    document.getElementById(
+      "autoMemberFeeIncome"
+    );
+
+  if (!checkbox) return;
+
+
+  const saved =
+    localStorage.getItem(
+      "autoMemberFeeIncome"
+    );
+
+
+  checkbox.checked =
+    saved === "true";
+
+
+  checkbox.addEventListener(
+    "change",
+    async () => {
+
+      localStorage.setItem(
+        "autoMemberFeeIncome",
+        checkbox.checked
+      );
+
+
+      await calculateTotals();
+
+    }
+  );
+
+}
+
+
+function isAutoMemberFeeIncome() {
+
+  const checkbox =
+    document.getElementById(
+      "autoMemberFeeIncome"
+    );
+
+  if (checkbox) {
+
+    return checkbox.checked;
+
+  }
+
+
+  return false;
+
+}
+
+
+// ==============================
 // 月変更
 // ==============================
 
 function setupMonthButtons() {
 
   const prev =
-    document.getElementById("prevMonth");
+    document.getElementById(
+      "prevMonth"
+    );
 
   const next =
-    document.getElementById("nextMonth");
+    document.getElementById(
+      "nextMonth"
+    );
+
 
   if (prev) {
 
-    prev.addEventListener("click", async () => {
+    prev.addEventListener(
+      "click",
+      async () => {
 
-      currentMonth--;
-
-      if (currentMonth < 1) {
-
-        currentMonth = 12;
-        currentYear--;
+        changeMonth(-1);
 
       }
-
-      updateMonthTitle();
-
-      await loadMonth();
-      await loadMembers();
-
-    });
+    );
 
   }
 
 
   if (next) {
 
-    next.addEventListener("click", async () => {
+    next.addEventListener(
+      "click",
+      async () => {
 
-      currentMonth++;
-
-      if (currentMonth > 12) {
-
-        currentMonth = 1;
-        currentYear++;
+        changeMonth(1);
 
       }
-
-      updateMonthTitle();
-
-      await loadMonth();
-      await loadMembers();
-
-    });
+    );
 
   }
+
+}
+
+
+// 月変更を1か所で管理
+async function changeMonth(
+  direction
+) {
+
+  currentMonth += direction;
+
+
+  if (currentMonth < 1) {
+
+    currentMonth = 12;
+    currentYear--;
+
+  }
+
+
+  if (currentMonth > 12) {
+
+    currentMonth = 1;
+    currentYear++;
+
+  }
+
+
+  updateMonthTitle();
+
+
+  const loadNumber =
+    ++monthLoadNumber;
+
+
+  await loadMonth();
+
+
+  // 古い月読み込み結果なら中断
+  if (
+    loadNumber !==
+    monthLoadNumber
+  ) {
+
+    return;
+
+  }
+
+
+  await loadMembers();
 
 }
 
@@ -244,9 +403,12 @@ function setupMonthButtons() {
 function updateMonthTitle() {
 
   const title =
-    document.getElementById("monthTitle");
+    document.getElementById(
+      "monthTitle"
+    );
 
   if (!title) return;
+
 
   title.textContent =
     `${currentYear}年${currentMonth}月`;
@@ -272,27 +434,48 @@ async function loadMonth() {
 
   if (!currentUser) return;
 
+
   const yearMonth =
     getYearMonth();
+
 
   const { data, error } =
     await supabaseClient
       .from("transactions")
       .select("*")
-      .eq("year_month", yearMonth)
-      .order("date", { ascending: true })
-      .order("created_at", { ascending: true });
+      .eq(
+        "year_month",
+        yearMonth
+      )
+      .order(
+        "date",
+        {
+          ascending: true
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
+
 
   if (error) {
 
     console.error(error);
 
     return;
+
   }
 
-  transactions = data || [];
+
+  transactions =
+    data || [];
+
 
   renderTransactions();
+
 
   await calculateTotals();
 
@@ -303,29 +486,45 @@ async function loadMonth() {
 // 部費収入取得
 // ==============================
 
-async function getPaidMemberFeesTotal(yearMonth) {
+async function getPaidMemberFeesTotal(
+  yearMonth
+) {
 
   const { data, error } =
     await supabaseClient
       .from("member_fees")
       .select("amount")
-      .eq("year_month", yearMonth)
-      .eq("paid", true);
+      .eq(
+        "year_month",
+        yearMonth
+      )
+      .eq(
+        "paid",
+        true
+      );
+
 
   if (error) {
 
     console.error(error);
 
     return 0;
+
   }
+
 
   let total = 0;
 
-  (data || []).forEach(row => {
 
-    total += Number(row.amount) || 0;
+  (data || []).forEach(
+    row => {
 
-  });
+      total +=
+        Number(row.amount) || 0;
+
+    }
+  );
+
 
   return total;
 
@@ -333,21 +532,131 @@ async function getPaidMemberFeesTotal(yearMonth) {
 
 
 // ==============================
-// 前月繰越計算
+// 前月繰越
 // ==============================
 
-async function getPreviousMonthBalance() {
+// ★重要
+// currentYear / currentMonthを変更せずに
+// 指定された年月をそのまま計算する
+async function calculateMonthBalance(
+  year,
+  month
+) {
 
+  // 2026年1月より前は0円
   if (
-    currentYear === 2026 &&
-    currentMonth === 1
+    year < 2026 ||
+    (
+      year === 2026 &&
+      month === 1
+    )
   ) {
 
     return 0;
+
   }
 
-  let year = currentYear;
-  let month = currentMonth - 1;
+
+  let previousYear =
+    year;
+
+  let previousMonth =
+    month - 1;
+
+
+  if (previousMonth === 0) {
+
+    previousMonth = 12;
+    previousYear--;
+
+  }
+
+
+  const previousYearMonth =
+    getYearMonth(
+      previousYear,
+      previousMonth
+    );
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("transactions")
+      .select(
+        "income, expense"
+      )
+      .eq(
+        "year_month",
+        previousYearMonth
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    return 0;
+
+  }
+
+
+  let income = 0;
+  let expense = 0;
+
+
+  (data || []).forEach(
+    row => {
+
+      income +=
+        Number(row.income) || 0;
+
+      expense +=
+        Number(row.expense) || 0;
+
+    }
+  );
+
+
+  let memberFeeIncome = 0;
+
+
+  if (
+    isAutoMemberFeeIncome()
+  ) {
+
+    memberFeeIncome =
+      await getPaidMemberFeesTotal(
+        previousYearMonth
+      );
+
+  }
+
+
+  const olderBalance =
+    await calculateMonthBalance(
+      previousYear,
+      previousMonth
+    );
+
+
+  return (
+    olderBalance +
+    income +
+    memberFeeIncome -
+    expense
+  );
+
+}
+
+
+async function getPreviousMonthBalance() {
+
+  let year =
+    currentYear;
+
+  let month =
+    currentMonth - 1;
+
 
   if (month === 0) {
 
@@ -356,59 +665,10 @@ async function getPreviousMonthBalance() {
 
   }
 
-  const previousYearMonth =
-    getYearMonth(year, month);
 
-
-  const { data, error } =
-    await supabaseClient
-      .from("transactions")
-      .select("income, expense")
-      .eq("year_month", previousYearMonth);
-
-  if (error) {
-
-    console.error(error);
-
-    return 0;
-  }
-
-
-  let income = 0;
-  let expense = 0;
-
-  (data || []).forEach(row => {
-
-    income += Number(row.income) || 0;
-    expense += Number(row.expense) || 0;
-
-  });
-
-
-  // 前月の部費収入
-  const memberFeeIncome =
-    await getPaidMemberFeesTotal(previousYearMonth);
-
-
-  // 前月のさらに前の繰越を取得
-  const savedYear = currentYear;
-  const savedMonth = currentMonth;
-
-  currentYear = year;
-  currentMonth = month;
-
-  const carryOver =
-    await getPreviousMonthBalance();
-
-  currentYear = savedYear;
-  currentMonth = savedMonth;
-
-
-  return (
-    carryOver +
-    income +
-    memberFeeIncome -
-    expense
+  return await calculateMonthBalance(
+    year,
+    month + 1
   );
 
 }
@@ -424,22 +684,36 @@ async function calculateTotals() {
   let expenseTotal = 0;
 
 
-  transactions.forEach(row => {
+  transactions.forEach(
+    row => {
 
-    incomeTotal += Number(row.income) || 0;
-    expenseTotal += Number(row.expense) || 0;
+      incomeTotal +=
+        Number(row.income) || 0;
 
-  });
+      expenseTotal +=
+        Number(row.expense) || 0;
 
-
-  // 部費の支払済合計
-  const memberFeeIncome =
-    await getPaidMemberFeesTotal(
-      getYearMonth()
-    );
+    }
+  );
 
 
-  incomeTotal += memberFeeIncome;
+  let memberFeeIncome = 0;
+
+
+  if (
+    isAutoMemberFeeIncome()
+  ) {
+
+    memberFeeIncome =
+      await getPaidMemberFeesTotal(
+        getYearMonth()
+      );
+
+  }
+
+
+  incomeTotal +=
+    memberFeeIncome;
 
 
   const carryOver =
@@ -453,22 +727,32 @@ async function calculateTotals() {
 
 
   const carryElement =
-    document.getElementById("carryOver");
+    document.getElementById(
+      "carryOver"
+    );
 
   const incomeElement =
-    document.getElementById("incomeTotal");
+    document.getElementById(
+      "incomeTotal"
+    );
 
   const expenseElement =
-    document.getElementById("expenseTotal");
+    document.getElementById(
+      "expenseTotal"
+    );
 
   const balanceElement =
-    document.getElementById("currentBalance");
+    document.getElementById(
+      "currentBalance"
+    );
 
 
   if (carryElement) {
 
     carryElement.textContent =
-      formatYen(carryOver);
+      formatYen(
+        carryOver
+      );
 
   }
 
@@ -476,7 +760,9 @@ async function calculateTotals() {
   if (incomeElement) {
 
     incomeElement.textContent =
-      formatYen(incomeTotal);
+      formatYen(
+        incomeTotal
+      );
 
   }
 
@@ -484,7 +770,9 @@ async function calculateTotals() {
   if (expenseElement) {
 
     expenseElement.textContent =
-      formatYen(expenseTotal);
+      formatYen(
+        expenseTotal
+      );
 
   }
 
@@ -492,7 +780,9 @@ async function calculateTotals() {
   if (balanceElement) {
 
     balanceElement.textContent =
-      formatYen(currentBalance);
+      formatYen(
+        currentBalance
+      );
 
   }
 
@@ -507,15 +797,18 @@ function formatYen(value) {
 
 
 // ==============================
-// 収支入力行追加
+// 収支入力
 // ==============================
 
 function setupAddRowButton() {
 
   const button =
-    document.getElementById("addRowButton");
+    document.getElementById(
+      "addRowButton"
+    );
 
   if (!button) return;
+
 
   button.addEventListener(
     "click",
@@ -529,14 +822,18 @@ async function addTransaction() {
 
   if (!isEditor()) {
 
-    alert("編集権限がありません。");
+    alert(
+      "編集権限がありません。"
+    );
 
     return;
+
   }
 
 
   const yearMonth =
     getYearMonth();
+
 
   const firstDate =
     `${yearMonth}-01`;
@@ -562,9 +859,12 @@ async function addTransaction() {
 
     console.error(error);
 
-    alert("収支の追加に失敗しました。");
+    alert(
+      "収支の追加に失敗しました。"
+    );
 
     return;
+
   }
 
 
@@ -578,260 +878,318 @@ async function addTransaction() {
 
 
 // ==============================
-// 収支一覧表示
+// 収支表示
 // ==============================
 
 function renderTransactions() {
 
   const tbody =
-    document.getElementById("transactionTable");
+    document.getElementById(
+      "transactionTable"
+    );
 
   if (!tbody) return;
+
 
   tbody.innerHTML = "";
 
 
-  transactions.forEach(row => {
+  transactions.forEach(
+    row => {
 
-    const tr =
-      document.createElement("tr");
-
-
-    // 日付
-    const dateTd =
-      document.createElement("td");
-
-    const dateInput =
-      document.createElement("input");
-
-    dateInput.type = "date";
-    dateInput.value = row.date || "";
-    dateInput.disabled = !isEditor();
-
-    dateInput.addEventListener("change", () => {
-
-      updateTransaction(
-        row.idansactions,
-        "date",
-        dateInput.value
-      );
-
-    });
-
-    dateTd.appendChild(dateInput);
+      const tr =
+        document.createElement("tr");
 
 
-    // 分類
-    const categoryTd =
-      document.createElement("td");
+      // 日付
+      const dateTd =
+        document.createElement("td");
 
-    const categorySelect =
-      document.createElement("select");
-
-    createCategoryOptions(
-      categorySelect,
-      row.category
-    );
-
-    categorySelect.disabled =
-      !isEditor();
-
-    categorySelect.addEventListener(
-      "change",
-      () => {
-
-        updateTransaction(
-          row.idansactions,
-          "category",
-          categorySelect.value
+      const dateInput =
+        document.createElement(
+          "input"
         );
 
-      }
-    );
+      dateInput.type =
+        "date";
 
-    categoryTd.appendChild(categorySelect);
+      dateInput.value =
+        row.date || "";
 
-
-    // 内訳
-    const detailTd =
-      document.createElement("td");
-
-    const detailInput =
-      document.createElement("input");
-
-    detailInput.type = "text";
-    detailInput.value =
-      row.detail || "";
-
-    detailInput.disabled =
-      !isEditor();
-
-    detailInput.addEventListener(
-      "change",
-      () => {
-
-        updateTransaction(
-          row.idansactions,
-          "detail",
-          detailInput.value
-        );
-
-      }
-    );
-
-    detailTd.appendChild(detailInput);
+      dateInput.disabled =
+        !isEditor();
 
 
-    // 収入
-    const incomeTd =
-      document.createElement("td");
-
-    const incomeInput =
-      document.createElement("input");
-
-    incomeInput.type = "number";
-    incomeInput.inputMode = "numeric";
-
-    incomeInput.value =
-      Number(row.income) || 0;
-
-    incomeInput.disabled =
-      !isEditor();
-
-    incomeInput.addEventListener(
-      "change",
-      () => {
-
-        const value =
-          Number(incomeInput.value) || 0;
-
-        updateTransaction(
-          row.idansactions,
-          "income",
-          value
-        );
-
-      }
-    );
-
-    incomeTd.appendChild(incomeInput);
-
-
-    // 支出
-    const expenseTd =
-      document.createElement("td");
-
-    const expenseInput =
-      document.createElement("input");
-
-    expenseInput.type = "number";
-    expenseInput.inputMode = "numeric";
-
-    expenseInput.value =
-      Number(row.expense) || 0;
-
-    expenseInput.disabled =
-      !isEditor();
-
-    expenseInput.addEventListener(
-      "change",
-      () => {
-
-        const value =
-          Number(expenseInput.value) || 0;
-
-        updateTransaction(
-          row.idansactions,
-          "expense",
-          value
-        );
-
-      }
-    );
-
-    expenseTd.appendChild(expenseInput);
-
-
-    // メモ
-    const memoTd =
-      document.createElement("td");
-
-    const memoInput =
-      document.createElement("input");
-
-    memoInput.type = "text";
-
-    memoInput.value =
-      row.memo || "";
-
-    memoInput.disabled =
-      !isEditor();
-
-    memoInput.addEventListener(
-      "change",
-      () => {
-
-        updateTransaction(
-          row.idansactions,
-          "memo",
-          memoInput.value
-        );
-
-      }
-    );
-
-    memoTd.appendChild(memoInput);
-
-
-    // 削除
-    const deleteTd =
-      document.createElement("td");
-
-    if (isEditor()) {
-
-      const deleteButton =
-        document.createElement("button");
-
-      deleteButton.textContent = "削除";
-
-      deleteButton.className =
-        "delete-button";
-
-      deleteButton.addEventListener(
-        "click",
+      dateInput.addEventListener(
+        "change",
         () => {
 
-          deleteTransaction(
-            row.idansactions
+          updateTransaction(
+            row.idansactions,
+            "date",
+            dateInput.value
           );
 
         }
       );
 
-      deleteTd.appendChild(
-        deleteButton
+
+      dateTd.appendChild(
+        dateInput
       );
 
+
+      // 分類
+      const categoryTd =
+        document.createElement("td");
+
+      const categorySelect =
+        document.createElement(
+          "select"
+        );
+
+
+      createCategoryOptions(
+        categorySelect,
+        row.category
+      );
+
+
+      categorySelect.disabled =
+        !isEditor();
+
+
+      categorySelect.addEventListener(
+        "change",
+        () => {
+
+          updateTransaction(
+            row.idansactions,
+            "category",
+            categorySelect.value
+          );
+
+        }
+      );
+
+
+      categoryTd.appendChild(
+        categorySelect
+      );
+
+
+      // 内訳
+      const detailTd =
+        document.createElement("td");
+
+      const detailInput =
+        document.createElement(
+          "input"
+        );
+
+      detailInput.type =
+        "text";
+
+      detailInput.value =
+        row.detail || "";
+
+      detailInput.disabled =
+        !isEditor();
+
+
+      detailInput.addEventListener(
+        "change",
+        () => {
+
+          updateTransaction(
+            row.idansactions,
+            "detail",
+            detailInput.value
+          );
+
+        }
+      );
+
+
+      detailTd.appendChild(
+        detailInput
+      );
+
+
+      // 収入
+      const incomeTd =
+        document.createElement("td");
+
+      const incomeInput =
+        document.createElement(
+          "input"
+        );
+
+      incomeInput.type =
+        "number";
+
+      incomeInput.inputMode =
+        "numeric";
+
+      incomeInput.value =
+        Number(row.income) || 0;
+
+      incomeInput.disabled =
+        !isEditor();
+
+
+      incomeInput.addEventListener(
+        "change",
+        () => {
+
+          updateTransaction(
+            row.idansactions,
+            "income",
+            Number(incomeInput.value) || 0
+          );
+
+        }
+      );
+
+
+      incomeTd.appendChild(
+        incomeInput
+      );
+
+
+      // 支出
+      const expenseTd =
+        document.createElement("td");
+
+      const expenseInput =
+        document.createElement(
+          "input"
+        );
+
+      expenseInput.type =
+        "number";
+
+      expenseInput.inputMode =
+        "numeric";
+
+      expenseInput.value =
+        Number(row.expense) || 0;
+
+      expenseInput.disabled =
+        !isEditor();
+
+
+      expenseInput.addEventListener(
+        "change",
+        () => {
+
+          updateTransaction(
+            row.idansactions,
+            "expense",
+            Number(expenseInput.value) || 0
+          );
+
+        }
+      );
+
+
+      expenseTd.appendChild(
+        expenseInput
+      );
+
+
+      // メモ
+      const memoTd =
+        document.createElement("td");
+
+      const memoInput =
+        document.createElement(
+          "input"
+        );
+
+      memoInput.type =
+        "text";
+
+      memoInput.value =
+        row.memo || "";
+
+      memoInput.disabled =
+        !isEditor();
+
+
+      memoInput.addEventListener(
+        "change",
+        () => {
+
+          updateTransaction(
+            row.idansactions,
+            "memo",
+            memoInput.value
+          );
+
+        }
+      );
+
+
+      memoTd.appendChild(
+        memoInput
+      );
+
+
+      // 削除
+      const deleteTd =
+        document.createElement("td");
+
+
+      if (isEditor()) {
+
+        const deleteButton =
+          document.createElement(
+            "button"
+          );
+
+        deleteButton.textContent =
+          "削除";
+
+        deleteButton.className =
+          "delete-button";
+
+
+        deleteButton.addEventListener(
+          "click",
+          () =>
+            deleteTransaction(
+              row.idansactions
+            )
+        );
+
+
+        deleteTd.appendChild(
+          deleteButton
+        );
+
+      }
+
+
+      tr.appendChild(dateTd);
+      tr.appendChild(categoryTd);
+      tr.appendChild(detailTd);
+      tr.appendChild(incomeTd);
+      tr.appendChild(expenseTd);
+      tr.appendChild(memoTd);
+      tr.appendChild(deleteTd);
+
+
+      tbody.appendChild(tr);
+
     }
-
-
-    tr.appendChild(dateTd);
-    tr.appendChild(categoryTd);
-    tr.appendChild(detailTd);
-    tr.appendChild(incomeTd);
-    tr.appendChild(expenseTd);
-    tr.appendChild(memoTd);
-    tr.appendChild(deleteTd);
-
-    tbody.appendChild(tr);
-
-  });
+  );
 
 }
 
 
 // ==============================
-// 分類プルダウン
+// 分類
 // ==============================
 
 function createCategoryOptions(
@@ -843,39 +1201,52 @@ function createCategoryOptions(
 
 
   const emptyOption =
-    document.createElement("option");
+    document.createElement(
+      "option"
+    );
 
   emptyOption.value = "";
-  emptyOption.textContent = "選択";
 
-  select.appendChild(emptyOption);
+  emptyOption.textContent =
+    "選択";
 
-
-  categories.forEach(category => {
-
-    const option =
-      document.createElement("option");
-
-    option.value =
-      category.namemename;
-
-    option.textContent =
-      category.namemename;
+  select.appendChild(
+    emptyOption
+  );
 
 
-    if (
-      category.namemename ===
-      selectedValue
-    ) {
+  categories.forEach(
+    category => {
 
-      option.selected = true;
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        category.namemename;
+
+      option.textContent =
+        category.namemename;
+
+
+      if (
+        category.namemename ===
+        selectedValue
+      ) {
+
+        option.selected =
+          true;
+
+      }
+
+
+      select.appendChild(
+        option
+      );
 
     }
-
-
-    select.appendChild(option);
-
-  });
+  );
 
 }
 
@@ -899,16 +1270,22 @@ async function updateTransaction(
       .update({
         [key]: value
       })
-      .eq("idansactions", id);
+      .eq(
+        "idansactions",
+        id
+      );
 
 
   if (error) {
 
     console.error(error);
 
-    alert("保存に失敗しました。");
+    alert(
+      "保存に失敗しました。"
+    );
 
     return;
+
   }
 
 
@@ -935,7 +1312,9 @@ async function updateTransaction(
 // 収支削除
 // ==============================
 
-async function deleteTransaction(id) {
+async function deleteTransaction(
+  id
+) {
 
   if (!isEditor()) return;
 
@@ -947,6 +1326,7 @@ async function deleteTransaction(id) {
   ) {
 
     return;
+
   }
 
 
@@ -954,16 +1334,22 @@ async function deleteTransaction(id) {
     await supabaseClient
       .from("transactions")
       .delete()
-      .eq("idansactions", id);
+      .eq(
+        "idansactions",
+        id
+      );
 
 
   if (error) {
 
     console.error(error);
 
-    alert("削除に失敗しました。");
+    alert(
+      "削除に失敗しました。"
+    );
 
     return;
+
   }
 
 
@@ -1009,11 +1395,13 @@ function setupCategoryManagement() {
             "categoryManagement"
           );
 
+
         if (!area) return;
 
 
         area.style.display =
-          area.style.display === "none"
+          area.style.display ===
+          "none"
             ? "block"
             : "none";
 
@@ -1035,19 +1423,18 @@ function setupCategoryManagement() {
 }
 
 
-// ==============================
-// 分類読み込み
-// ==============================
-
 async function loadCategories() {
 
   const { data, error } =
     await supabaseClient
       .from("categories")
       .select("*")
-      .order("created_at", {
-        ascending: true
-      });
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
 
 
   if (error) {
@@ -1055,19 +1442,18 @@ async function loadCategories() {
     console.error(error);
 
     return;
+
   }
 
 
-  categories = data || [];
+  categories =
+    data || [];
+
 
   renderCategoryList();
 
 }
 
-
-// ==============================
-// 分類一覧表示
-// ==============================
 
 function renderCategoryList() {
 
@@ -1082,69 +1468,85 @@ function renderCategoryList() {
   list.innerHTML = "";
 
 
-  categories.forEach(category => {
+  categories.forEach(
+    category => {
 
-    const div =
-      document.createElement("div");
-
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.gap = "8px";
-    div.style.marginBottom = "8px";
+      const div =
+        document.createElement(
+          "div"
+        );
 
 
-    const text =
-      document.createElement("span");
+      div.style.display =
+        "flex";
 
-    text.textContent =
-      category.namemename;
+      div.style.alignItems =
+        "center";
 
-    text.style.flex = "1";
+      div.style.gap =
+        "8px";
 
-
-    const deleteButton =
-      document.createElement("button");
-
-    deleteButton.textContent =
-      "削除";
-
-    deleteButton.className =
-      "delete-button";
-
-    deleteButton.disabled =
-      !isEditor();
+      div.style.marginBottom =
+        "8px";
 
 
-    deleteButton.addEventListener(
-      "click",
-      () =>
-        deleteCategory(
-          category.idid
-        )
-    );
+      const text =
+        document.createElement(
+          "span"
+        );
+
+      text.textContent =
+        category.namemename;
+
+      text.style.flex =
+        "1";
 
 
-    div.appendChild(text);
-    div.appendChild(deleteButton);
+      const deleteButton =
+        document.createElement(
+          "button"
+        );
 
-    list.appendChild(div);
+      deleteButton.textContent =
+        "削除";
 
-  });
+      deleteButton.className =
+        "delete-button";
+
+      deleteButton.disabled =
+        !isEditor();
+
+
+      deleteButton.addEventListener(
+        "click",
+        () =>
+          deleteCategory(
+            category.idid
+          )
+      );
+
+
+      div.appendChild(text);
+      div.appendChild(deleteButton);
+
+      list.appendChild(div);
+
+    }
+  );
 
 }
 
-
-// ==============================
-// 分類追加
-// ==============================
 
 async function addCategory() {
 
   if (!isEditor()) {
 
-    alert("編集権限がありません。");
+    alert(
+      "編集権限がありません。"
+    );
 
     return;
+
   }
 
 
@@ -1179,6 +1581,7 @@ async function addCategory() {
     );
 
     return;
+
   }
 
 
@@ -1186,7 +1589,8 @@ async function addCategory() {
     await supabaseClient
       .from("categories")
       .insert({
-        namemename: categoryName
+        namemename:
+          categoryName
       })
       .select()
       .single();
@@ -1201,6 +1605,7 @@ async function addCategory() {
     );
 
     return;
+
   }
 
 
@@ -1213,11 +1618,9 @@ async function addCategory() {
 }
 
 
-// ==============================
-// 分類削除
-// ==============================
-
-async function deleteCategory(id) {
+async function deleteCategory(
+  id
+) {
 
   if (!isEditor()) return;
 
@@ -1229,6 +1632,7 @@ async function deleteCategory(id) {
   ) {
 
     return;
+
   }
 
 
@@ -1236,7 +1640,10 @@ async function deleteCategory(id) {
     await supabaseClient
       .from("categories")
       .delete()
-      .eq("idid", id);
+      .eq(
+        "idid",
+        id
+      );
 
 
   if (error) {
@@ -1248,6 +1655,7 @@ async function deleteCategory(id) {
     );
 
     return;
+
   }
 
 
@@ -1269,8 +1677,6 @@ async function deleteCategory(id) {
 // 部費管理
 // ==================================================
 
-
-// 部費管理ボタン
 function setupMemberManagement() {
 
   const addButton =
@@ -1301,10 +1707,16 @@ async function loadMembers() {
     await supabaseClient
       .from("members")
       .select("*")
-      .eq("active", true)
-      .order("created_at", {
-        ascending: true
-      });
+      .eq(
+        "active",
+        true
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
 
 
   if (error) {
@@ -1312,10 +1724,12 @@ async function loadMembers() {
     console.error(error);
 
     return;
+
   }
 
 
-  members = data || [];
+  members =
+    data || [];
 
 
   await prepareMemberFees();
@@ -1325,7 +1739,7 @@ async function loadMembers() {
 }
 
 
-// 月ごとの部費データを準備
+// 月ごとの部費データ
 async function prepareMemberFees() {
 
   const yearMonth =
@@ -1336,7 +1750,10 @@ async function prepareMemberFees() {
     await supabaseClient
       .from("member_fees")
       .select("*")
-      .eq("year_month", yearMonth);
+      .eq(
+        "year_month",
+        yearMonth
+      );
 
 
   if (error) {
@@ -1344,16 +1761,20 @@ async function prepareMemberFees() {
     console.error(error);
 
     return;
+
   }
 
 
-  memberFees = data || [];
+  memberFees =
+    data || [];
 
 
-  // まだ当月データがない部員について作成
+  // 当月のデータが存在しない部員だけ作成
   if (isEditor()) {
 
-    for (const member of members) {
+    for (
+      const member of members
+    ) {
 
       const exists =
         memberFees.some(
@@ -1363,35 +1784,45 @@ async function prepareMemberFees() {
         );
 
 
-      if (!exists) {
-
-        const { data: newFee, error: insertError } =
-          await supabaseClient
-            .from("member_fees")
-            .insert({
-              member_id: member.id,
-              year_month: yearMonth,
-              amount:
-                Number(member.monthly_fee) || 0,
-              paid: false
-            })
-            .select()
-            .single();
+      if (exists) continue;
 
 
-        if (insertError) {
+      const { data: newFee,
+              error: insertError } =
+        await supabaseClient
+          .from("member_fees")
+          .insert({
+            member_id:
+              member.id,
 
-          console.error(
-            insertError
-          );
+            year_month:
+              yearMonth,
 
-          continue;
-        }
+            amount:
+              Number(
+                member.monthly_fee
+              ) || 0,
+
+            paid: false
+          })
+          .select()
+          .single();
 
 
-        memberFees.push(newFee);
+      if (insertError) {
+
+        console.error(
+          insertError
+        );
+
+        continue;
 
       }
+
+
+      memberFees.push(
+        newFee
+      );
 
     }
 
@@ -1414,171 +1845,226 @@ function renderMembers() {
   tbody.innerHTML = "";
 
 
-  members.forEach(member => {
+  members.forEach(
+    member => {
 
-    const tr =
-      document.createElement("tr");
-
-
-    // 部員名
-    const nameTd =
-      document.createElement("td");
-
-    const nameInput =
-      document.createElement("input");
-
-    nameInput.type = "text";
-    nameInput.value =
-      member.name || "";
-
-    nameInput.disabled =
-      !isEditor();
+      const tr =
+        document.createElement(
+          "tr"
+        );
 
 
-    nameInput.addEventListener(
-      "change",
-      () =>
-        updateMember(
-          member.id,
-          "name",
-          nameInput.value
-        )
-    );
+      // ==========================
+      // 部員名
+      // ==========================
+
+      const nameTd =
+        document.createElement(
+          "td"
+        );
+
+      const nameInput =
+        document.createElement(
+          "input"
+        );
+
+      nameInput.type =
+        "text";
+
+      nameInput.value =
+        member.name || "";
+
+      nameInput.disabled =
+        !isEditor();
 
 
-    nameTd.appendChild(
-      nameInput
-    );
-
-
-    // 月額部費
-    const feeTd =
-      document.createElement("td");
-
-    const feeInput =
-      document.createElement("input");
-
-    feeInput.type = "number";
-    feeInput.inputMode = "numeric";
-
-    feeInput.value =
-      Number(member.monthly_fee) || 0;
-
-    feeInput.disabled =
-      !isEditor();
-
-
-    feeInput.addEventListener(
-      "change",
-      () =>
-        updateMemberFee(
-          member.id,
-          Number(feeInput.value) || 0
-        )
-    );
-
-
-    feeTd.appendChild(
-      feeInput
-    );
-
-
-    // 支払い
-    const paymentTd =
-      document.createElement("td");
-
-
-    const fee =
-      memberFees.find(
-        item =>
-          item.member_id ===
-          member.id
+      nameInput.addEventListener(
+        "change",
+        () =>
+          updateMember(
+            member.id,
+            "name",
+            nameInput.value
+          )
       );
 
 
-    const paymentButton =
-      document.createElement("button");
+      nameTd.appendChild(
+        nameInput
+      );
 
 
-    if (fee?.paid) {
+      // ==========================
+      // 月ごとの部費
+      // ==========================
 
-      paymentButton.textContent =
-        "支払済";
+      const feeTd =
+        document.createElement(
+          "td"
+        );
 
-      paymentButton.style.background =
-        "#4caf50";
+      const feeInput =
+        document.createElement(
+          "input"
+        );
 
-      paymentButton.style.color =
-        "white";
+      feeInput.type =
+        "number";
 
-    } else {
-
-      paymentButton.textContent =
-        "未払い";
-
-    }
-
-
-    paymentButton.disabled =
-      !isEditor();
+      feeInput.inputMode =
+        "numeric";
 
 
-    paymentButton.addEventListener(
-      "click",
-      () =>
-        toggleMemberPayment(
-          member.id
-        )
-    );
+      // ★ここが重要
+      // member.monthly_feeではなく
+      // 現在月のmember_fees.amountを表示
+      const currentFee =
+        memberFees.find(
+          fee =>
+            fee.member_id ===
+            member.id
+        );
 
 
-    paymentTd.appendChild(
-      paymentButton
-    );
+      feeInput.value =
+        Number(
+          currentFee?.amount ??
+          member.monthly_fee
+        ) || 0;
 
 
-    // 操作
-    const actionTd =
-      document.createElement("td");
+      feeInput.disabled =
+        !isEditor();
 
 
-    if (isEditor()) {
+      feeInput.addEventListener(
+        "change",
+        () =>
+          updateMemberFee(
+            member.id,
+            Number(
+              feeInput.value
+            ) || 0
+          )
+      );
 
-      const deleteButton =
-        document.createElement("button");
 
-      deleteButton.textContent =
-        "削除";
-
-      deleteButton.className =
-        "delete-button";
+      feeTd.appendChild(
+        feeInput
+      );
 
 
-      deleteButton.addEventListener(
+      // ==========================
+      // 支払い
+      // ==========================
+
+      const paymentTd =
+        document.createElement(
+          "td"
+        );
+
+
+      const fee =
+        memberFees.find(
+          item =>
+            item.member_id ===
+            member.id
+        );
+
+
+      const paymentButton =
+        document.createElement(
+          "button"
+        );
+
+
+      if (fee?.paid) {
+
+        paymentButton.textContent =
+          "支払済";
+
+        paymentButton.style.background =
+          "#4caf50";
+
+        paymentButton.style.color =
+          "white";
+
+      } else {
+
+        paymentButton.textContent =
+          "未払い";
+
+      }
+
+
+      paymentButton.disabled =
+        !isEditor();
+
+
+      paymentButton.addEventListener(
         "click",
         () =>
-          deactivateMember(
+          toggleMemberPayment(
             member.id
           )
       );
 
 
-      actionTd.appendChild(
-        deleteButton
+      paymentTd.appendChild(
+        paymentButton
       );
 
+
+      // ==========================
+      // 削除
+      // ==========================
+
+      const actionTd =
+        document.createElement(
+          "td"
+        );
+
+
+      if (isEditor()) {
+
+        const deleteButton =
+          document.createElement(
+            "button"
+          );
+
+        deleteButton.textContent =
+          "削除";
+
+        deleteButton.className =
+          "delete-button";
+
+
+        deleteButton.addEventListener(
+          "click",
+          () =>
+            deactivateMember(
+              member.id
+            )
+        );
+
+
+        actionTd.appendChild(
+          deleteButton
+        );
+
+      }
+
+
+      tr.appendChild(nameTd);
+      tr.appendChild(feeTd);
+      tr.appendChild(paymentTd);
+      tr.appendChild(actionTd);
+
+
+      tbody.appendChild(tr);
+
     }
-
-
-    tr.appendChild(nameTd);
-    tr.appendChild(feeTd);
-    tr.appendChild(paymentTd);
-    tr.appendChild(actionTd);
-
-
-    tbody.appendChild(tr);
-
-  });
+  );
 
 
   renderMemberSummary();
@@ -1586,7 +2072,10 @@ function renderMembers() {
 }
 
 
-// 部費集計表示
+// ==============================
+// 部費集計
+// ==============================
+
 function renderMemberSummary() {
 
   const area =
@@ -1602,37 +2091,42 @@ function renderMemberSummary() {
   let unpaid = 0;
 
 
-  members.forEach(member => {
+  members.forEach(
+    member => {
 
-    const fee =
-      memberFees.find(
-        item =>
-          item.member_id ===
-          member.id
-      );
-
-
-    const amount =
-      Number(
-        fee?.amount ??
-        member.monthly_fee
-      ) || 0;
+      const fee =
+        memberFees.find(
+          item =>
+            item.member_id ===
+            member.id
+        );
 
 
-    expected += amount;
+      const amount =
+        Number(
+          fee?.amount ??
+          member.monthly_fee
+        ) || 0;
 
 
-    if (fee?.paid) {
+      expected +=
+        amount;
 
-      paid += amount;
 
-    } else {
+      if (fee?.paid) {
 
-      unpaid += amount;
+        paid +=
+          amount;
+
+      } else {
+
+        unpaid +=
+          amount;
+
+      }
 
     }
-
-  });
+  );
 
 
   area.innerHTML = `
@@ -1649,7 +2143,10 @@ function renderMemberSummary() {
 }
 
 
+// ==============================
 // 部員追加
+// ==============================
+
 async function addMember() {
 
   if (!isEditor()) {
@@ -1659,6 +2156,7 @@ async function addMember() {
     );
 
     return;
+
   }
 
 
@@ -1693,7 +2191,9 @@ async function addMember() {
 
 
   if (
-    !Number.isFinite(monthlyFee) ||
+    !Number.isFinite(
+      monthlyFee
+    ) ||
     monthlyFee < 0
   ) {
 
@@ -1702,6 +2202,7 @@ async function addMember() {
     );
 
     return;
+
   }
 
 
@@ -1709,9 +2210,14 @@ async function addMember() {
     await supabaseClient
       .from("members")
       .insert({
-        name: memberName,
-        monthly_fee: monthlyFee,
-        active: true
+        name:
+          memberName,
+
+        monthly_fee:
+          monthlyFee,
+
+        active:
+          true
       })
       .select()
       .single();
@@ -1726,21 +2232,30 @@ async function addMember() {
     );
 
     return;
+
   }
 
 
   members.push(data);
 
 
-  // 今月分も作成
-  const { data: feeData, error: feeError } =
+  // 今月分
+  const { data: feeData,
+          error: feeError } =
     await supabaseClient
       .from("member_fees")
       .insert({
-        member_id: data.id,
-        year_month: getYearMonth(),
-        amount: monthlyFee,
-        paid: false
+        member_id:
+          data.id,
+
+        year_month:
+          getYearMonth(),
+
+        amount:
+          monthlyFee,
+
+        paid:
+          false
       })
       .select()
       .single();
@@ -1748,11 +2263,15 @@ async function addMember() {
 
   if (feeError) {
 
-    console.error(feeError);
+    console.error(
+      feeError
+    );
 
   } else {
 
-    memberFees.push(feeData);
+    memberFees.push(
+      feeData
+    );
 
   }
 
@@ -1764,7 +2283,10 @@ async function addMember() {
 }
 
 
-// 部員情報更新
+// ==============================
+// 部員名更新
+// ==============================
+
 async function updateMember(
   id,
   key,
@@ -1774,7 +2296,8 @@ async function updateMember(
   if (!isEditor()) return;
 
 
-  value = value.trim();
+  value =
+    value.trim();
 
 
   if (!value) {
@@ -1786,6 +2309,7 @@ async function updateMember(
     await loadMembers();
 
     return;
+
   }
 
 
@@ -1793,9 +2317,13 @@ async function updateMember(
     await supabaseClient
       .from("members")
       .update({
-        [key]: value
+        [key]:
+          value
       })
-      .eq("id", id);
+      .eq(
+        "id",
+        id
+      );
 
 
   if (error) {
@@ -1807,25 +2335,31 @@ async function updateMember(
     );
 
     return;
+
   }
 
 
   const member =
     members.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
 
   if (member) {
 
-    member[key] = value;
+    member[key] =
+      value;
 
   }
 
 }
 
 
-// 月額部費変更
+// ==============================
+// 現在月の部費変更
+// ==============================
+
 async function updateMemberFee(
   memberId,
   amount
@@ -1846,26 +2380,41 @@ async function updateMemberFee(
     await loadMembers();
 
     return;
+
   }
 
 
-  const member =
-    members.find(
-      item => item.id === memberId
+  const currentFee =
+    memberFees.find(
+      fee =>
+        fee.member_id ===
+        memberId
     );
 
 
-  if (!member) return;
+  if (!currentFee) {
+
+    alert(
+      "今月の部費データが見つかりません。"
+    );
+
+    return;
+
+  }
 
 
-  // 部員マスターの月額を変更
+  // ★現在月の部費だけ変更
   const { error } =
     await supabaseClient
-      .from("members")
+      .from("member_fees")
       .update({
-        monthly_fee: amount
+        amount:
+          amount
       })
-      .eq("id", memberId);
+      .eq(
+        "id",
+        currentFee.id
+      );
 
 
   if (error) {
@@ -1873,57 +2422,71 @@ async function updateMemberFee(
     console.error(error);
 
     alert(
-      "月額部費の保存に失敗しました。"
+      "部費の保存に失敗しました。"
     );
 
     return;
+
   }
 
 
-  member.monthly_fee = amount;
+  currentFee.amount =
+    amount;
 
 
-  // 現在の月の請求額も変更
-  const currentFee =
-    memberFees.find(
+  // 今後新しく作られる月の
+  // 初期値としてマスターも変更
+  const member =
+    members.find(
       item =>
-        item.member_id ===
+        item.id ===
         memberId
     );
 
 
-  if (currentFee && !currentFee.paid) {
+  if (member) {
 
-    const { error: feeError } =
+    const { error:
+      memberError } =
       await supabaseClient
-        .from("member_fees")
+        .from("members")
         .update({
-          amount: amount
+          monthly_fee:
+            amount
         })
-        .eq("id", currentFee.id);
+        .eq(
+          "id",
+          memberId
+        );
 
 
-    if (feeError) {
+    if (memberError) {
 
       console.error(
-        feeError
+        memberError
       );
 
-      return;
+    } else {
+
+      member.monthly_fee =
+        amount;
+
     }
-
-
-    currentFee.amount = amount;
 
   }
 
 
   renderMembers();
 
+  await calculateTotals();
+
 }
 
 
-// 支払済／未払い切り替え
+// ==============================
+// 支払済／未払い
+// ==============================
+
 async function toggleMemberPayment(
   memberId
 ) {
@@ -1946,6 +2509,7 @@ async function toggleMemberPayment(
     );
 
     return;
+
   }
 
 
@@ -1957,13 +2521,18 @@ async function toggleMemberPayment(
     await supabaseClient
       .from("member_fees")
       .update({
-        paid: newPaid,
+        paid:
+          newPaid,
+
         paid_at:
           newPaid
             ? new Date().toISOString()
             : null
       })
-      .eq("id", fee.id);
+      .eq(
+        "id",
+        fee.id
+      );
 
 
   if (error) {
@@ -1975,10 +2544,13 @@ async function toggleMemberPayment(
     );
 
     return;
+
   }
 
 
-  fee.paid = newPaid;
+  fee.paid =
+    newPaid;
+
 
   fee.paid_at =
     newPaid
@@ -1993,7 +2565,10 @@ async function toggleMemberPayment(
 }
 
 
-// 部員を非表示にする
+// ==============================
+// 部員を一覧から削除
+// ==============================
+
 async function deactivateMember(
   id
 ) {
@@ -2008,6 +2583,7 @@ async function deactivateMember(
   ) {
 
     return;
+
   }
 
 
@@ -2015,9 +2591,13 @@ async function deactivateMember(
     await supabaseClient
       .from("members")
       .update({
-        active: false
+        active:
+          false
       })
-      .eq("id", id);
+      .eq(
+        "id",
+        id
+      );
 
 
   if (error) {
@@ -2029,6 +2609,7 @@ async function deactivateMember(
     );
 
     return;
+
   }
 
 
@@ -2059,13 +2640,50 @@ async function deactivateMember(
 
 function showIncomeExpense() {
 
-  document
-    .getElementById(
+  const incomeSection =
+    document.getElementById(
       "incomeExpenseSection"
-    )
-    ?.scrollIntoView({
-      behavior: "smooth"
-    });
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "block";
+
+  }
+
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "none";
+
+  }
+
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "none";
+
+  }
+
+
+  incomeSection?.scrollIntoView({
+    behavior:
+      "smooth"
+  });
 
 }
 
@@ -2116,7 +2734,8 @@ async function showMembers() {
 
 
   membersSection?.scrollIntoView({
-    behavior: "smooth"
+    behavior:
+      "smooth"
   });
 
 }
