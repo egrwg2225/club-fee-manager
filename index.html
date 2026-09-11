@@ -14,37 +14,28 @@
   <h2>部費管理ログイン</h2>
 
   <input
-
     type="email"
-
     id="loginEmail"
-
     placeholder="メールアドレス"
-
   >
 
   <input
-
     type="password"
-
     id="loginPassword"
-
     placeholder="パスワード"
-
   >
 
   <button id="loginButton">
-
     ログイン
-
   </button>
 
   <p id="loginMessage"></p>
-  
-
 
 </div>
+
+
 <div id="appContent" style="display:none;">
+
 <header>
 
   <h1>部費管理</h1>
@@ -53,7 +44,10 @@
 
 </header>
 
+
 <main>
+
+  <!-- 月選択 -->
 
   <section class="month-area">
 
@@ -65,6 +59,8 @@
 
   </section>
 
+
+  <!-- 残高 -->
 
   <section class="balance-card">
 
@@ -91,6 +87,8 @@
   </section>
 
 
+  <!-- メニュー -->
+
   <section class="menu">
 
     <button onclick="showIncomeExpense()">
@@ -112,34 +110,32 @@
   </section>
 
 
+  <!-- 収支入力 -->
+
   <section id="incomeExpenseSection">
 
     <h2>収支入力</h2>
 
     <button id="addRowButton">
-  ＋ 収支を追加
-</button>
-
-  <button id="manageCategoryButton">
-
-    ⚙ 分類を管理
-
-  </button>
-
-  <div id="categoryManagement" style="display:none;">
-
-    <h3>分類管理</h3>
-
-    <div id="categoryList"></div>
-
-    <button id="addCategoryButton">
-
-      ＋ 分類を追加
-
+      ＋ 収支を追加
     </button>
 
-  </div>
-    
+    <button id="manageCategoryButton">
+      ⚙ 分類を管理
+    </button>
+
+    <div id="categoryManagement" style="display:none;">
+
+      <h3>分類管理</h3>
+
+      <div id="categoryList"></div>
+
+      <button id="addCategoryButton">
+        ＋ 分類を追加
+      </button>
+
+    </div>
+
     <div class="table-wrapper">
 
       <table>
@@ -159,7 +155,6 @@
         </thead>
 
         <tbody id="transactionTable">
-
         </tbody>
 
       </table>
@@ -168,10 +163,62 @@
 
   </section>
 
+
+  <!-- 部費管理 -->
+
+  <section id="membersSection" style="display:none;">
+
+    <h2>部費管理</h2>
+
+    <button id="addMemberButton">
+      ＋ 部員を追加
+    </button>
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>部員名</th>
+            <th>月額部費</th>
+            <th>支払い</th>
+            <th>操作</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="membersTable">
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div id="memberSummary"></div>
+
+  </section>
+
+
+  <!-- 月別集計 -->
+
+  <section id="summarySection" style="display:none;">
+
+    <h2>月別集計</h2>
+
+    <p>月別集計機能はこれから実装します。</p>
+
+  </section>
+
 </main>
-  </div>
+
+</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js?v=2"></script>
+
+<script src="script.js?v=3"></script>
+
 </body>
 </html>
