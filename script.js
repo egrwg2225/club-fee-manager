@@ -3230,7 +3230,7 @@ async function showSummary() {
 // A4 PDF出力
 // ==================================================
 
-function exportPDF() {
+async function exportPDF() {
 
   const incomeSection =
     document.getElementById(
@@ -3283,7 +3283,7 @@ function exportPDF() {
   // 集計内容を最新状態にする
   // --------------------------
 
-  renderSummary();
+  await renderSummary();
 
 
   // --------------------------
