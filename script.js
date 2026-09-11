@@ -689,29 +689,7 @@ async function getPreviousMonthBalance() {
 }
 
 
-async function getPreviousMonthBalance() {
 
-  let year =
-    currentYear;
-
-  let month =
-    currentMonth - 1;
-
-
-  if (month === 0) {
-
-    month = 12;
-    year--;
-
-  }
-
-
-  return await calculateMonthBalance(
-    year,
-    month + 1
-  );
-
-}
 
 
 // ==============================
@@ -3248,10 +3226,12 @@ async function showSummary() {
 
 }
 
+// ==================================================
+// A4 PDF出力
+// ==================================================
 
 function exportPDF() {
 
-  // 月別集計を表示
   const incomeSection =
     document.getElementById(
       "incomeExpenseSection"
@@ -3292,7 +3272,24 @@ function exportPDF() {
   }
 
 
+  // --------------------------
+  // PDF用の収支明細を作成
+  // --------------------------
+
+  createPDFTransactionTable();
+
+
+  // --------------------------
+  // 集計内容を最新状態にする
+  // --------------------------
+
+  renderSummary();
+
+
+  // --------------------------
   // 少し待ってから印刷
+  // --------------------------
+
   setTimeout(
     () => {
 
@@ -3301,5 +3298,333 @@ function exportPDF() {
     },
     300
   );
+
+}
+
+
+// ==================================================
+// PDF用 収支明細
+// ==================================================
+
+function createPDFTransactionTable() {
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+
+  if (!summarySection) return;
+
+
+  // 既に作成済みなら削除
+  const oldTable =
+    document.getElementById(
+      "pdfTransactionSection"
+    );
+
+
+  if (oldTable) {
+
+    oldTable.remove();
+
+  }
+
+
+  const section =
+    document.createElement(
+      "div"
+    );
+
+
+  section.id =
+    "pdfTransactionSection";
+
+
+  const title =
+    document.createElement(
+      "h3"
+    );
+
+
+  title.textContent =
+    "収支明細";
+
+
+  section.appendChild(
+    title
+  );
+
+
+  // 明細がない場合
+  if (
+    !transactions ||
+    transactions.length === 0
+  ) {
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+    empty.textContent =
+      "収支明細はありません。";
+
+    empty.className =
+      "pdf-empty";
+
+    section.appendChild(
+      empty
+    );
+
+  } else {
+
+    const table =
+      document.createElement(
+        "table"
+      );
+
+
+    table.className =
+      "pdf-transaction-table";
+
+
+    // --------------------------
+    // 見出し
+    // --------------------------
+
+    const thead =
+      document.createElement(
+        "thead"
+      );
+
+
+    const headerRow =
+      document.createElement(
+        "tr"
+      );
+
+
+    [
+      "日付",
+      "分類",
+      "内訳",
+      "収入",
+      "支出",
+      "メモ"
+    ].forEach(
+      text => {
+
+        const th =
+          document.createElement(
+            "th"
+          );
+
+        th.textContent =
+          text;
+
+        headerRow.appendChild(
+          th
+        );
+
+      }
+    );
+
+
+    thead.appendChild(
+      headerRow
+    );
+
+
+    table.appendChild(
+      thead
+    );
+
+
+    // --------------------------
+    // 明細
+    // --------------------------
+
+    const tbody =
+      document.createElement(
+        "tbody"
+      );
+
+
+    transactions.forEach(
+      row => {
+
+        const tr =
+          document.createElement(
+            "tr"
+          );
+
+
+        // 日付
+        const dateTd =
+          document.createElement(
+            "td"
+          );
+
+        dateTd.textContent =
+          formatPDFDate(
+            row.date
+          );
+
+
+        // 分類
+        const categoryTd =
+          document.createElement(
+            "td"
+          );
+
+        categoryTd.textContent =
+          row.category?.trim() ||
+          "未分類";
+
+
+        // 内訳
+        const detailTd =
+          document.createElement(
+            "td"
+          );
+
+        detailTd.textContent =
+          row.detail?.trim() ||
+          "";
+
+
+        // 収入
+        const incomeTd =
+          document.createElement(
+            "td"
+          );
+
+        const income =
+          Number(row.income) || 0;
+
+        incomeTd.textContent =
+          income > 0
+            ? formatYen(income)
+            : "";
+
+
+        // 支出
+        const expenseTd =
+          document.createElement(
+            "td"
+          );
+
+        const expense =
+          Number(row.expense) || 0;
+
+        expenseTd.textContent =
+          expense > 0
+            ? formatYen(expense)
+            : "";
+
+
+        // メモ
+        const memoTd =
+          document.createElement(
+            "td"
+          );
+
+        memoTd.textContent =
+          row.memo?.trim() ||
+          "";
+
+
+        tr.appendChild(
+          dateTd
+        );
+
+        tr.appendChild(
+          categoryTd
+        );
+
+        tr.appendChild(
+          detailTd
+        );
+
+        tr.appendChild(
+          incomeTd
+        );
+
+        tr.appendChild(
+          expenseTd
+        );
+
+        tr.appendChild(
+          memoTd
+        );
+
+
+        tbody.appendChild(
+          tr
+        );
+
+      }
+    );
+
+
+    table.appendChild(
+      tbody
+    );
+
+
+    section.appendChild(
+      table
+    );
+
+  }
+
+
+  // summaryContentの後ろに追加
+  const summaryContent =
+    document.getElementById(
+      "summaryContent"
+    );
+
+
+  if (summaryContent) {
+
+    summaryContent.after(
+      section
+    );
+
+  } else {
+
+    summarySection.appendChild(
+      section
+    );
+
+  }
+
+}
+
+
+// ==================================================
+// PDF用 日付表示
+// ==================================================
+
+function formatPDFDate(
+  date
+) {
+
+  if (!date) return "";
+
+  const parts =
+    date.split("-");
+
+
+  if (parts.length !== 3) {
+
+    return date;
+
+  }
+
+
+  return `${Number(parts[1])}/${Number(parts[2])}`;
 
 }
