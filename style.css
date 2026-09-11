@@ -178,31 +178,28 @@ select {
 @media print {
 
   @page {
-
     size: A4 portrait;
-    margin: 10mm;
-
+    margin: 7mm;
   }
-
 
   * {
-
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-
   }
 
-
+  html,
   body {
-
-    background: white;
+    width: 100%;
+    height: auto;
     margin: 0;
     padding: 0;
-
+    background: white;
+    font-size: 10px;
   }
 
-
-  /* 印刷時に不要な部分を非表示 */
+  /* ==============================
+     印刷しない部分
+     ============================== */
 
   #loginSection,
   .menu,
@@ -213,204 +210,168 @@ select {
   #manageCategoryButton,
   #categoryManagement,
   #addMemberButton,
-  #autoMemberFeeIncome {
-
+  #autoMemberFeeIncome,
+  button,
+  input,
+  select {
     display: none !important;
-
   }
 
-
-  header {
-
-    background: white;
-    color: black;
-    padding: 0 0 8px 0;
-    border-bottom: 2px solid #333;
-
-  }
-
-
-  header h1 {
-
-    font-size: 20px;
-    margin: 0;
-
-  }
-
-
-  header p {
-
-    display: none;
-
-  }
-
+  /* ==============================
+     全体
+     ============================== */
 
   main {
-
     width: 100%;
     max-width: none;
     margin: 0;
     padding: 0;
-
   }
 
+  header {
+    background: white;
+    color: black;
+    padding: 0 0 4px 0;
+    margin: 0;
+    border-bottom: 1px solid #333;
+  }
 
-  /* 月表示 */
+  header h1 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  header p {
+    display: none;
+  }
+
+  /* ==============================
+     月表示
+     ============================== */
 
   .month-area {
-
     display: flex !important;
-    margin: 8px 0 12px 0;
-
+    justify-content: center;
+    margin: 4px 0 6px 0;
+    padding: 0;
   }
-
 
   .month-area h2 {
-
-    font-size: 18px;
+    font-size: 14px;
     min-width: auto;
-
+    margin: 0;
   }
 
-
-  /* 残高 */
+  /* ==============================
+     上部の残高
+     ※ PDFでは重複するため非表示
+     ============================== */
 
   .balance-card {
-
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr);
-
-    border: 1px solid #aaa;
-    box-shadow: none;
-
-    margin-bottom: 12px;
-    padding: 8px;
-
+    display: none !important;
   }
 
-
-  .balance-item {
-
-    padding: 6px;
-
-  }
-
-
-  .balance-item span {
-
-    font-size: 10px;
-
-  }
-
-
-  .balance-item strong {
-
-    font-size: 15px;
-
-  }
-
-
-  /* 月別集計 */
+  /* ==============================
+     月別集計
+     ============================== */
 
   #summarySection {
-
     display: block !important;
-
+    margin: 0;
+    padding: 0;
   }
-
 
   #summarySection > h2 {
-
-    font-size: 17px;
-    margin: 8px 0;
-
+    font-size: 13px;
+    margin: 4px 0;
   }
 
+  /* ==============================
+     集計カード
+     ============================== */
 
   #summaryContent {
-
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-
+    gap: 5px;
+    margin: 0;
   }
-
 
   .summary-card {
-
     background: white;
-    border: 1px solid #aaa;
-    border-radius: 6px;
-
-    padding: 8px;
+    border: 1px solid #999;
+    border-radius: 3px;
+    padding: 5px;
+    margin: 0;
 
     page-break-inside: avoid;
-
+    break-inside: avoid;
   }
-
 
   .summary-card h3 {
-
-    font-size: 13px;
-    margin: 0 0 6px 0;
-
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 4px;
-
+    font-size: 10px;
+    margin: 0 0 3px 0;
+    padding: 0 0 2px 0;
+    border-bottom: 1px solid #aaa;
   }
 
+  /* ==============================
+     集計行
+     ============================== */
 
   .summary-row {
-
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 3px 0;
+    padding: 1px 0;
 
-    font-size: 11px;
+    font-size: 9px;
+    line-height: 1.2;
 
     border-bottom: 1px dotted #ddd;
-
   }
-
 
   .summary-row strong {
-
-    font-size: 11px;
-
+    font-size: 9px;
   }
-
 
   .summary-total {
-
-    border-top: 2px solid #333;
+    border-top: 1px solid #333;
     border-bottom: none;
 
-    margin-top: 5px;
-    padding-top: 5px;
+    margin-top: 2px;
+    padding-top: 2px;
 
-    font-size: 13px;
-
+    font-size: 10px;
   }
-
 
   .summary-total strong {
-
-    font-size: 15px;
-
+    font-size: 11px;
   }
 
+  /* ==============================
+     長い内訳が増えた場合
+     ============================== */
 
-  /* 印刷時の余計な表示を抑える */
-
-  button,
-  input,
-  select {
-
-    display: none !important;
-
+  #summaryIncomeBreakdown,
+  #summaryExpenseBreakdown {
+    max-height: 185px;
+    overflow: hidden;
   }
 
+  /* ==============================
+     印刷時の改ページ防止
+     ============================== */
+
+  section,
+  .summary-card {
+    page-break-before: auto;
+    page-break-after: auto;
+    page-break-inside: avoid;
+    break-before: auto;
+    break-after: auto;
+    break-inside: avoid;
+  }
 
 }
