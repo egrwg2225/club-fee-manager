@@ -375,3 +375,86 @@ select {
   }
 
 }
+
+  /* ==============================
+     収支明細
+     ============================== */
+
+  #pdfTransactionSection {
+    margin-top: 6px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #pdfTransactionSection h3 {
+    font-size: 11px;
+    margin: 4px 0 3px 0;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #999;
+  }
+
+  .pdf-transaction-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 7.5px;
+  }
+
+  .pdf-transaction-table th,
+  .pdf-transaction-table td {
+    border: 1px solid #bbb;
+    padding: 2px 3px;
+    height: 14px;
+    line-height: 1.1;
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .pdf-transaction-table th {
+    background: #eee;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  /* 列幅 */
+
+  .pdf-transaction-table th:nth-child(1),
+  .pdf-transaction-table td:nth-child(1) {
+    width: 9%;
+    text-align: center;
+  }
+
+  .pdf-transaction-table th:nth-child(2),
+  .pdf-transaction-table td:nth-child(2) {
+    width: 14%;
+  }
+
+  .pdf-transaction-table th:nth-child(3),
+  .pdf-transaction-table td:nth-child(3) {
+    width: 27%;
+  }
+
+  .pdf-transaction-table th:nth-child(4),
+  .pdf-transaction-table td:nth-child(4) {
+    width: 13%;
+    text-align: right;
+  }
+
+  .pdf-transaction-table th:nth-child(5),
+  .pdf-transaction-table td:nth-child(5) {
+    width: 13%;
+    text-align: right;
+  }
+
+  .pdf-transaction-table th:nth-child(6),
+  .pdf-transaction-table td:nth-child(6) {
+    width: 24%;
+  }
+
+  .pdf-empty {
+    font-size: 8px;
+    padding: 3px;
+  }
