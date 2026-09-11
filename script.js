@@ -3251,8 +3251,55 @@ async function showSummary() {
 
 function exportPDF() {
 
-  alert(
-    "A4 PDF出力機能はこれから実装します。"
+  // 月別集計を表示
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "none";
+
+  }
+
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "none";
+
+  }
+
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "block";
+
+  }
+
+
+  // 少し待ってから印刷
+  setTimeout(
+    () => {
+
+      window.print();
+
+    },
+    300
   );
 
 }
