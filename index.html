@@ -214,11 +214,81 @@
 
   <section id="summarySection" style="display:none;">
 
-    <h2>月別集計</h2>
+  <h2>月別集計</h2>
 
-    <p>月別集計機能はこれから実装します。</p>
+  <div id="summaryContent">
 
-  </section>
+    <div class="summary-card">
+      <h3>月間収支</h3>
+
+      <div class="summary-row">
+        <span>前月繰越</span>
+        <strong id="summaryCarryOver">0円</strong>
+      </div>
+
+      <div class="summary-row">
+        <span>収入合計</span>
+        <strong id="summaryIncome">0円</strong>
+      </div>
+
+      <div class="summary-row">
+        <span>支出合計</span>
+        <strong id="summaryExpense">0円</strong>
+      </div>
+
+      <div class="summary-row summary-total">
+        <span>今月残高</span>
+        <strong id="summaryBalance">0円</strong>
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+
+      <h3>収入の内訳</h3>
+
+      <div id="summaryIncomeBreakdown">
+        収入はありません。
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <h3>支出の分類別</h3>
+
+      <div id="summaryExpenseBreakdown">
+        支出はありません。
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <h3>部費状況</h3>
+
+      <div class="summary-row">
+        <span>請求予定</span>
+        <strong id="summaryFeeExpected">0円</strong>
+      </div>
+
+      <div class="summary-row">
+        <span>支払済</span>
+        <strong id="summaryFeePaid">0円</strong>
+      </div>
+
+      <div class="summary-row">
+        <span>未払い</span>
+        <strong id="summaryFeeUnpaid">0円</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
 </main>
 
