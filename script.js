@@ -2422,17 +2422,24 @@ async function updateMemberFee(
 
 
   // ★現在月の部費だけ変更
-  const { error } =
-    await supabaseClient
-      .from("member_fees")
-      .update({
-        amount:
-          amount
-      })
-      .eq(
-        "id",
-        currentFee.id
-      );
+  const currentYearMonth =
+  getYearMonth();
+
+const { error } =
+  await supabaseClient
+    .from("member_fees")
+    .update({
+      amount:
+        amount
+    })
+    .eq(
+      "member_id",
+      memberId
+    )
+    .gte(
+      "year_month",
+      currentYearMonth
+    );
 
 
   if (error) {
