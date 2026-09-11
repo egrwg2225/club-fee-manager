@@ -538,6 +538,10 @@ async function getPaidMemberFeesTotal(
 // ★重要
 // currentYear / currentMonthを変更せずに
 // 指定された年月をそのまま計算する
+// ==============================
+// 前月繰越
+// ==============================
+
 async function calculateMonthBalance(
   year,
   month
@@ -548,7 +552,7 @@ async function calculateMonthBalance(
     year < 2026 ||
     (
       year === 2026 &&
-      month === 1
+      month < 1
     )
   ) {
 
@@ -557,6 +561,7 @@ async function calculateMonthBalance(
   }
 
 
+  // 前月
   let previousYear =
     year;
 
@@ -572,6 +577,13 @@ async function calculateMonthBalance(
   }
 
 
+  const currentYearMonth =
+    getYearMonth(
+      year,
+      month
+    );
+
+
   const previousYearMonth =
     getYearMonth(
       previousYear,
@@ -579,6 +591,7 @@ async function calculateMonthBalance(
     );
 
 
+  // 現在月の収支を取得
   const { data, error } =
     await supabaseClient
       .from("transactions")
@@ -587,7 +600,7 @@ async function calculateMonthBalance(
       )
       .eq(
         "year_month",
-        previousYearMonth
+        currentYearMonth
       );
 
 
@@ -617,6 +630,7 @@ async function calculateMonthBalance(
   );
 
 
+  // 部費の自動収入
   let memberFeeIncome = 0;
 
 
@@ -626,13 +640,14 @@ async function calculateMonthBalance(
 
     memberFeeIncome =
       await getPaidMemberFeesTotal(
-        previousYearMonth
+        currentYearMonth
       );
 
   }
 
 
-  const olderBalance =
+  // 前月の残高
+  const carryOver =
     await calculateMonthBalance(
       previousYear,
       previousMonth
@@ -640,10 +655,35 @@ async function calculateMonthBalance(
 
 
   return (
-    olderBalance +
+    carryOver +
     income +
     memberFeeIncome -
     expense
+  );
+
+}
+
+
+async function getPreviousMonthBalance() {
+
+  let year =
+    currentYear;
+
+  let month =
+    currentMonth - 1;
+
+
+  if (month === 0) {
+
+    month = 12;
+    year--;
+
+  }
+
+
+  return await calculateMonthBalance(
+    year,
+    month
   );
 
 }
@@ -2740,12 +2780,471 @@ async function showMembers() {
 
 }
 
+// ==================================================
+// 月別集計
+// ==================================================
 
-function showSummary() {
+async function renderSummary() {
 
-  alert(
-    "月別集計機能はこれから実装します。"
+  // --------------------------
+  // 基本データ
+  // --------------------------
+
+  let incomeTotal = 0;
+  let expenseTotal = 0;
+
+
+  transactions.forEach(
+    row => {
+
+      incomeTotal +=
+        Number(row.income) || 0;
+
+      expenseTotal +=
+        Number(row.expense) || 0;
+
+    }
   );
+
+
+  // --------------------------
+  // 部費
+  // --------------------------
+
+  let feeExpected = 0;
+  let feePaid = 0;
+  let feeUnpaid = 0;
+
+
+  members.forEach(
+    member => {
+
+      const fee =
+        memberFees.find(
+          item =>
+            item.member_id ===
+            member.id
+        );
+
+
+      const amount =
+        Number(
+          fee?.amount ??
+          member.monthly_fee
+        ) || 0;
+
+
+      feeExpected +=
+        amount;
+
+
+      if (fee?.paid) {
+
+        feePaid +=
+          amount;
+
+      } else {
+
+        feeUnpaid +=
+          amount;
+
+      }
+
+    }
+  );
+
+
+  // --------------------------
+  // 部費を収入に含めるか
+  // --------------------------
+
+  const autoMemberFee =
+    isAutoMemberFeeIncome();
+
+
+  if (autoMemberFee) {
+
+    incomeTotal +=
+      feePaid;
+
+  }
+
+
+  // --------------------------
+  // 前月繰越
+  // --------------------------
+
+  const carryOver =
+    await getPreviousMonthBalance();
+
+
+  const currentBalance =
+    carryOver +
+    incomeTotal -
+    expenseTotal;
+
+
+  // --------------------------
+  // 基本金額表示
+  // --------------------------
+
+  const carryElement =
+    document.getElementById(
+      "summaryCarryOver"
+    );
+
+  const incomeElement =
+    document.getElementById(
+      "summaryIncome"
+    );
+
+  const expenseElement =
+    document.getElementById(
+      "summaryExpense"
+    );
+
+  const balanceElement =
+    document.getElementById(
+      "summaryBalance"
+    );
+
+
+  if (carryElement) {
+
+    carryElement.textContent =
+      formatYen(
+        carryOver
+      );
+
+  }
+
+
+  if (incomeElement) {
+
+    incomeElement.textContent =
+      formatYen(
+        incomeTotal
+      );
+
+  }
+
+
+  if (expenseElement) {
+
+    expenseElement.textContent =
+      formatYen(
+        expenseTotal
+      );
+
+  }
+
+
+  if (balanceElement) {
+
+    balanceElement.textContent =
+      formatYen(
+        currentBalance
+      );
+
+  }
+
+
+  // --------------------------
+  // 収入の分類別集計
+  // --------------------------
+
+  const incomeMap = {};
+
+
+  transactions.forEach(
+    row => {
+
+      const amount =
+        Number(row.income) || 0;
+
+
+      if (amount <= 0) return;
+
+
+      const category =
+        row.category?.trim() ||
+        "未分類";
+
+
+      if (!incomeMap[category]) {
+
+        incomeMap[category] = 0;
+
+      }
+
+
+      incomeMap[category] +=
+        amount;
+
+    }
+  );
+
+
+  // 部費を自動収入にしている場合
+  if (
+    autoMemberFee &&
+    feePaid > 0
+  ) {
+
+    incomeMap["部費"] =
+      (incomeMap["部費"] || 0) +
+      feePaid;
+
+  }
+
+
+  renderSummaryBreakdown(
+    "summaryIncomeBreakdown",
+    incomeMap,
+    "収入はありません。"
+  );
+
+
+  // --------------------------
+  // 支出の分類別集計
+  // --------------------------
+
+  const expenseMap = {};
+
+
+  transactions.forEach(
+    row => {
+
+      const amount =
+        Number(row.expense) || 0;
+
+
+      if (amount <= 0) return;
+
+
+      const category =
+        row.category?.trim() ||
+        "未分類";
+
+
+      if (!expenseMap[category]) {
+
+        expenseMap[category] = 0;
+
+      }
+
+
+      expenseMap[category] +=
+        amount;
+
+    }
+  );
+
+
+  renderSummaryBreakdown(
+    "summaryExpenseBreakdown",
+    expenseMap,
+    "支出はありません。"
+  );
+
+
+  // --------------------------
+  // 部費状況
+  // --------------------------
+
+  const expectedElement =
+    document.getElementById(
+      "summaryFeeExpected"
+    );
+
+  const paidElement =
+    document.getElementById(
+      "summaryFeePaid"
+    );
+
+  const unpaidElement =
+    document.getElementById(
+      "summaryFeeUnpaid"
+    );
+
+
+  if (expectedElement) {
+
+    expectedElement.textContent =
+      formatYen(
+        feeExpected
+      );
+
+  }
+
+
+  if (paidElement) {
+
+    paidElement.textContent =
+      formatYen(
+        feePaid
+      );
+
+  }
+
+
+  if (unpaidElement) {
+
+    unpaidElement.textContent =
+      formatYen(
+        feeUnpaid
+      );
+
+  }
+
+}
+
+
+// ==============================
+// 集計内訳表示
+// ==============================
+
+function renderSummaryBreakdown(
+  elementId,
+  data,
+  emptyMessage
+) {
+
+  const area =
+    document.getElementById(
+      elementId
+    );
+
+
+  if (!area) return;
+
+
+  const entries =
+    Object.entries(data);
+
+
+  if (
+    entries.length === 0
+  ) {
+
+    area.textContent =
+      emptyMessage;
+
+    return;
+
+  }
+
+
+  // 金額の大きい順
+  entries.sort(
+    (a, b) =>
+      b[1] - a[1]
+  );
+
+
+  area.innerHTML = "";
+
+
+  entries.forEach(
+    ([category, amount]) => {
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+
+      row.className =
+        "summary-row";
+
+
+      const name =
+        document.createElement(
+          "span"
+        );
+
+      name.textContent =
+        category;
+
+
+      const value =
+        document.createElement(
+          "strong"
+        );
+
+      value.textContent =
+        formatYen(
+          amount
+        );
+
+
+      row.appendChild(
+        name
+      );
+
+      row.appendChild(
+        value
+      );
+
+
+      area.appendChild(
+        row
+      );
+
+    }
+  );
+
+}
+
+async function showSummary() {
+
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "none";
+
+  }
+
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "none";
+
+  }
+
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "block";
+
+  }
+
+
+  await renderSummary();
+
+
+  summarySection?.scrollIntoView({
+    behavior:
+      "smooth"
+  });
 
 }
 
