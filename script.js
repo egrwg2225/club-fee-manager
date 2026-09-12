@@ -2590,9 +2590,9 @@ async function deactivateMember(
         fee.member_id !== id
     );
 
-  renderMembers();
+  await loadMembers();
 
-  await calculateTotals();
+await calculateTotals();
 
 }
 
