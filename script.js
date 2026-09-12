@@ -2218,21 +2218,23 @@ async function addMember() {
   }
 
   const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("members")
-      .insert({
-        name:
-          memberName,
-        monthly_fee:
-          monthlyFee,
-        active:
-          true
-      })
-      .select()
-      .single();
+  data,
+  error
+} =
+  await supabaseClient
+    .from("members")
+    .insert({
+      name:
+        memberName,
+      monthly_fee:
+        monthlyFee,
+      active:
+        true,
+      joined_year_month:
+        getYearMonth()
+    })
+    .select()
+    .single();
 
   if (error) {
 
