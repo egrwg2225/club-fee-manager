@@ -199,14 +199,16 @@ async function unlockEditor() {
 
   if (error) {
 
-    console.error(error);
+  console.error(error);
 
-    alert(
-      "編集者モードへの切り替えに失敗しました。"
-    );
+  alert(
+    "編集者モードへの切り替えに失敗しました。\n\n" +
+    "エラー内容：\n" +
+    error.message
+  );
 
-    return;
-  }
+  return;
+}
 
 
   if (!data) {
