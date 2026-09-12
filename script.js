@@ -210,29 +210,38 @@ async function loadUserRole() {
   if (!currentUser) return;
 
 
-  const { data, error } =
+  // --------------------------------
+  // 編集者かどうかをSupabaseで確認
+  // --------------------------------
+
+  const {
+    data,
+    error
+  } =
     await supabaseClient
-      .from("user_roles")
-      .select("role")
-      .eq(
-        "user_id",
-        currentUser.id
-      )
-      .maybeSingle();
+      .rpc("is_editor");
 
 
   if (error) {
 
     console.error(error);
 
-    return;
+    currentRole =
+      "viewer";
+
+  } else {
+
+    currentRole =
+      data === true
+        ? "editor"
+        : "viewer";
 
   }
 
 
-  currentRole =
-    data?.role || "viewer";
-
+  // --------------------------------
+  // 画面表示
+  // --------------------------------
 
   const loginSection =
     document.getElementById(
@@ -276,8 +285,14 @@ async function loadUserRole() {
   }
 
 
+  // --------------------------------
+  // データ読み込み
+  // --------------------------------
+
   await loadCategories();
+
   await loadMonth();
+
   await loadMembers();
 
 }
