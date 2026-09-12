@@ -155,10 +155,21 @@ function setupEditorModeButton() {
 
   button.addEventListener(
     "click",
-    unlockEditor
+    async () => {
+
+      if (currentRole === "editor") {
+
+        await lockEditor();
+
+      } else {
+
+        await unlockEditor();
+
+      }
+
+    }
   );
 }
-
 
 async function unlockEditor() {
 
@@ -289,7 +300,51 @@ async function login() {
   await loadUserRole();
 
 }
+async function lockEditor() {
 
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .rpc("lock_editor");
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "編集者モードを解除できませんでした。\n\n" +
+      "エラー内容：\n" +
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  if (!data) {
+
+    alert(
+      "編集者モードを解除できませんでした。"
+    );
+
+    return;
+
+  }
+
+
+  // 現在の権限を再確認
+  await loadUserRole();
+
+
+  alert(
+    "編集者モードを解除しました。"
+  );
+
+}
 
 // ==============================
 // ロール取得
@@ -373,7 +428,27 @@ async function loadUserRole() {
         : "閲覧者";
 
   }
+const editorModeButton =
+  document.getElementById(
+    "editorModeButton"
+  );
 
+
+if (editorModeButton) {
+
+  if (currentRole === "editor") {
+
+    editorModeButton.textContent =
+      "🔓 編集者モード解除";
+
+  } else {
+
+    editorModeButton.textContent =
+      "🔒 編集者モード";
+
+  }
+
+}
 
   // --------------------------------
   // データ読み込み
