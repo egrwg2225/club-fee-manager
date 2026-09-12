@@ -1190,12 +1190,13 @@ function renderTransactions() {
         );
 
       incomeInput.type = "number";
-      incomeInput.inputMode =
-        "numeric";
+incomeInput.inputMode =
+  "numeric";
 
-      incomeInput.value =
-        Number(row.income) || 0;
+incomeInput.placeholder = "0";
 
+incomeInput.value =
+  Number(row.income) || "";
       incomeInput.disabled =
         !isEditor();
 
@@ -1227,14 +1228,15 @@ function renderTransactions() {
         );
 
       expenseInput.type =
-        "number";
+  "number";
 
-      expenseInput.inputMode =
-        "numeric";
+expenseInput.inputMode =
+  "numeric";
 
-      expenseInput.value =
-        Number(row.expense) || 0;
+expenseInput.placeholder = "0";
 
+expenseInput.value =
+  Number(row.expense) || "";
       expenseInput.disabled =
         !isEditor();
 
