@@ -1,281 +1,218 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>部費管理</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部費管理</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-
- 
-
-<div id="appContent" style="display:none;">
+<div id="appContent">
 
 <header>
+<h1>部費管理</h1>
+<p id="userRole"></p>
 
-  <h1>部費管理</h1>
+<button id="editorModeButton">🔒 編集者モード</button>
 
-  <p id="userRole"></p>
-
-  <button id="editorModeButton">
-    🔒 編集者モード
-  </button>
-
-  <button
-  id="changePasswordButton"
-  style="display:none;"
->
-  🔑 編集パスワード変更
+<button id="changePasswordButton" style="display:none;">
+🔑 編集パスワード変更
 </button>
-
 </header>
-
 
 <main>
 
-  <!-- 月選択 -->
+<section class="month-area">
+<button id="prevMonth">‹</button>
+<h2 id="monthTitle">2026年9月</h2>
+<button id="nextMonth">›</button>
+</section>
 
-  <section class="month-area">
+<section class="balance-card">
 
-    <button id="prevMonth">‹</button>
+<div class="balance-item">
+<span>前月繰越</span>
+<strong id="carryOver">0円</strong>
+</div>
 
-    <h2 id="monthTitle">2026年9月</h2>
+<div class="balance-item income">
+<span>収入合計</span>
+<strong id="incomeTotal">0円</strong>
+</div>
 
-    <button id="nextMonth">›</button>
+<div class="balance-item expense">
+<span>支出合計</span>
+<strong id="expenseTotal">0円</strong>
+</div>
 
-  </section>
+<div class="balance-item total">
+<span>今月残高</span>
+<strong id="currentBalance">0円</strong>
+</div>
 
+</section>
 
-  <!-- 残高 -->
+<section class="menu">
 
-  <section class="balance-card">
+<button onclick="showIncomeExpense()">収支入力</button>
+<button onclick="showMembers()">部費管理</button>
+<button onclick="showSummary()">月別集計</button>
+<button onclick="exportPDF()">A4 PDF出力</button>
 
-    <div class="balance-item">
-      <span>前月繰越</span>
-      <strong id="carryOver">0円</strong>
-    </div>
+</section>
 
-    <div class="balance-item income">
-      <span>収入合計</span>
-      <strong id="incomeTotal">0円</strong>
-    </div>
+<section id="incomeExpenseSection">
 
-    <div class="balance-item expense">
-      <span>支出合計</span>
-      <strong id="expenseTotal">0円</strong>
-    </div>
+<h2>収支入力</h2>
 
-    <div class="balance-item total">
-      <span>今月残高</span>
-      <strong id="currentBalance">0円</strong>
-    </div>
+<button id="addRowButton">＋ 収支を追加</button>
+<button id="manageCategoryButton">⚙ 分類を管理</button>
 
-  </section>
+<div id="categoryManagement" style="display:none;">
 
+<h3>分類管理</h3>
 
-  <!-- メニュー -->
+<div id="categoryList"></div>
 
-  <section class="menu">
+<button id="addCategoryButton">＋ 分類を追加</button>
 
-    <button onclick="showIncomeExpense()">
-      収支入力
-    </button>
+</div>
 
-    <button onclick="showMembers()">
-      部費管理
-    </button>
+<div class="table-wrapper">
 
-    <button onclick="showSummary()">
-      月別集計
-    </button>
+<table>
 
-    <button onclick="exportPDF()">
-      A4 PDF出力
-    </button>
+<thead>
+<tr>
+<th>日付</th>
+<th>分類</th>
+<th>内訳</th>
+<th>収入</th>
+<th>支出</th>
+<th>メモ</th>
+<th></th>
+</tr>
+</thead>
 
-  </section>
+<tbody id="transactionTable"></tbody>
 
+</table>
 
-  <!-- 収支入力 -->
+</div>
 
-  <section id="incomeExpenseSection">
+</section>
 
-    <h2>収支入力</h2>
+<section id="membersSection" style="display:none;">
 
-    <button id="addRowButton">
-      ＋ 収支を追加
-    </button>
+<h2>部費管理</h2>
 
-    <button id="manageCategoryButton">
-      ⚙ 分類を管理
-    </button>
+<button id="addMemberButton">＋ 部員を追加</button>
 
-    <div id="categoryManagement" style="display:none;">
+<label style="display:block;margin:15px 0;">
 
-      <h3>分類管理</h3>
+<input
+type="checkbox"
+id="autoMemberFeeIncome"
+style="width:auto;"
+>
 
-      <div id="categoryList"></div>
+支払済の部費を「収入」に自動反映する
 
-      <button id="addCategoryButton">
-        ＋ 分類を追加
-      </button>
+</label>
 
-    </div>
+<div class="table-wrapper">
 
-    <div class="table-wrapper">
+<table>
 
-      <table>
+<thead>
+<tr>
+<th>部員名</th>
+<th>月額部費</th>
+<th>支払い</th>
+<th>操作</th>
+</tr>
+</thead>
 
-        <thead>
+<tbody id="membersTable"></tbody>
 
-          <tr>
-            <th>日付</th>
-            <th>分類</th>
-            <th>内訳</th>
-            <th>収入</th>
-            <th>支出</th>
-            <th>メモ</th>
-            <th></th>
-          </tr>
+</table>
 
-        </thead>
+</div>
 
-        <tbody id="transactionTable">
-        </tbody>
+<div id="memberSummary"></div>
 
-      </table>
+</section>
 
-    </div>
+<section id="summarySection" style="display:none;">
 
-  </section>
+<h2>月別集計</h2>
 
+<div id="summaryContent">
 
-  <!-- 部費管理 -->
+<div class="summary-card">
 
-  <section id="membersSection" style="display:none;">
+<h3>月間収支</h3>
 
-    <h2>部費管理</h2>
+<div class="summary-row">
+<span>前月繰越</span>
+<strong id="summaryCarryOver">0円</strong>
+</div>
 
-    <button id="addMemberButton">
-      ＋ 部員を追加
-    </button>
+<div class="summary-row">
+<span>収入合計</span>
+<strong id="summaryIncome">0円</strong>
+</div>
 
-    <label style="display:block; margin:15px 0;">
-      <input
-        type="checkbox"
-        id="autoMemberFeeIncome"
-        style="width:auto;"
-      >
-      支払済の部費を「収入」に自動反映する
-    </label>
+<div class="summary-row">
+<span>支出合計</span>
+<strong id="summaryExpense">0円</strong>
+</div>
 
-    <div class="table-wrapper">
+<div class="summary-row summary-total">
+<span>今月残高</span>
+<strong id="summaryBalance">0円</strong>
+</div>
 
-      <table>
+</div>
 
-        <thead>
+<div class="summary-card">
 
-          <tr>
-            <th>部員名</th>
-            <th>月額部費</th>
-            <th>支払い</th>
-            <th>操作</th>
-          </tr>
+<h3>収入の内訳</h3>
+<div id="summaryIncomeBreakdown">収入はありません。</div>
 
-        </thead>
+</div>
 
-        <tbody id="membersTable">
-        </tbody>
+<div class="summary-card">
 
-      </table>
+<h3>支出の分類別</h3>
+<div id="summaryExpenseBreakdown">支出はありません。</div>
 
-    </div>
+</div>
 
-    <div id="memberSummary"></div>
+<div class="summary-card">
 
-  </section>
+<h3>部費状況</h3>
 
+<div class="summary-row">
+<span>請求予定</span>
+<strong id="summaryFeeExpected">0円</strong>
+</div>
 
-  <!-- 月別集計 -->
+<div class="summary-row">
+<span>支払済</span>
+<strong id="summaryFeePaid">0円</strong>
+</div>
 
-  <section id="summarySection" style="display:none;">
+<div class="summary-row">
+<span>未払い</span>
+<strong id="summaryFeeUnpaid">0円</strong>
+</div>
 
-  <h2>月別集計</h2>
+</div>
 
-  <div id="summaryContent">
-
-    <div class="summary-card">
-      <h3>月間収支</h3>
-
-      <div class="summary-row">
-        <span>前月繰越</span>
-        <strong id="summaryCarryOver">0円</strong>
-      </div>
-
-      <div class="summary-row">
-        <span>収入合計</span>
-        <strong id="summaryIncome">0円</strong>
-      </div>
-
-      <div class="summary-row">
-        <span>支出合計</span>
-        <strong id="summaryExpense">0円</strong>
-      </div>
-
-      <div class="summary-row summary-total">
-        <span>今月残高</span>
-        <strong id="summaryBalance">0円</strong>
-      </div>
-    </div>
-
-
-    <div class="summary-card">
-
-      <h3>収入の内訳</h3>
-
-      <div id="summaryIncomeBreakdown">
-        収入はありません。
-      </div>
-
-    </div>
-
-
-    <div class="summary-card">
-
-      <h3>支出の分類別</h3>
-
-      <div id="summaryExpenseBreakdown">
-        支出はありません。
-      </div>
-
-    </div>
-
-
-    <div class="summary-card">
-
-      <h3>部費状況</h3>
-
-      <div class="summary-row">
-        <span>請求予定</span>
-        <strong id="summaryFeeExpected">0円</strong>
-      </div>
-
-      <div class="summary-row">
-        <span>支払済</span>
-        <strong id="summaryFeePaid">0円</strong>
-      </div>
-
-      <div class="summary-row">
-        <span>未払い</span>
-        <strong id="summaryFeeUnpaid">0円</strong>
-      </div>
-
-    </div>
-
-  </div>
+</div>
 
 </section>
 
@@ -283,10 +220,8 @@
 
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script src="script.js?v=3"></script>
+<script src="script.js?v=4"></script>
 
 </body>
 </html>
