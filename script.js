@@ -110,9 +110,8 @@ document.addEventListener(
 
 
     // 通常の画面機能
-    setupLoginButton();
     setupEditorModeButton();
-    setupMonthButtons();
+　　　setupMonthButtons();
     setupAddRowButton();
     setupCategoryManagement();
     setupMemberManagement();
@@ -123,53 +122,13 @@ document.addEventListener(
 );
 
 
-// ==============================
-// ログイン
-// ==============================
 
-function setupLoginButton() {
 
-  const button =
-    document.getElementById("loginButton");
-
-  if (!button) return;
-
-  button.addEventListener(
-    "click",
-    login
-  );
-
-}
 // ==============================
 // 編集者モード
 // ==============================
 
-function setupEditorModeButton() {
 
-  const button =
-    document.getElementById(
-      "editorModeButton"
-    );
-
-  if (!button) return;
-
-  button.addEventListener(
-    "click",
-    async () => {
-
-      if (currentRole === "editor") {
-
-        await lockEditor();
-
-      } else {
-
-        await unlockEditor();
-
-      }
-
-    }
-  );
-}
 
 function setupEditorModeButton() {
 
@@ -413,64 +372,7 @@ async function unlockEditor() {
 
 }
 
-async function login() {
 
-  const email =
-    document
-      .getElementById("loginEmail")
-      .value
-      .trim();
-
-  const password =
-    document
-      .getElementById("loginPassword")
-      .value;
-
-  const message =
-    document.getElementById(
-      "loginMessage"
-    );
-
-
-  if (!email || !password) {
-
-    message.textContent =
-      "メールアドレスとパスワードを入力してください。";
-
-    return;
-
-  }
-
-
-  message.textContent =
-    "ログイン中…";
-
-
-  const { data, error } =
-    await supabaseClient.auth
-      .signInWithPassword({
-        email,
-        password
-      });
-
-
-  if (error) {
-
-    console.error(error);
-
-    message.textContent =
-      "ログインできませんでした。";
-
-    return;
-
-  }
-
-
-  currentUser = data.user;
-
-  await loadUserRole();
-
-}
 async function lockEditor() {
 
   const {
