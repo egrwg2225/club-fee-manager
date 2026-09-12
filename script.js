@@ -171,6 +171,177 @@ function setupEditorModeButton() {
   );
 }
 
+function setupEditorModeButton() {
+
+  const button =
+    document.getElementById(
+      "editorModeButton"
+    );
+
+  if (!button) return;
+
+  button.addEventListener(
+    "click",
+    async () => {
+
+      if (currentRole === "editor") {
+
+        await lockEditor();
+
+      } else {
+
+        await unlockEditor();
+
+      }
+
+    }
+  );
+
+
+  const changePasswordButton =
+    document.getElementById(
+      "changePasswordButton"
+    );
+
+  if (changePasswordButton) {
+
+    changePasswordButton.addEventListener(
+      "click",
+      changeEditorPassword
+    );
+
+  }
+
+}
+
+async function changeEditorPassword() {
+
+  if (currentRole !== "editor") {
+
+    alert(
+      "編集者モードで実行してください。"
+    );
+
+    return;
+
+  }
+
+
+  const currentPassword =
+    prompt(
+      "現在のパスワードを入力してください。"
+    );
+
+
+  if (currentPassword === null) {
+    return;
+  }
+
+
+  const newPassword =
+    prompt(
+      "新しいパスワードを入力してください。"
+    );
+
+
+  if (newPassword === null) {
+    return;
+  }
+
+
+  if (!newPassword) {
+
+    alert(
+      "新しいパスワードを入力してください。"
+    );
+
+    return;
+
+  }
+
+
+  const confirmPassword =
+    prompt(
+      "新しいパスワードをもう一度入力してください。"
+    );
+
+
+  if (confirmPassword === null) {
+    return;
+  }
+
+
+  if (newPassword !== confirmPassword) {
+
+    alert(
+      "新しいパスワードが一致しません。"
+    );
+
+    return;
+
+  }
+
+
+  if (newPassword.length < 6) {
+
+    alert(
+      "パスワードは6文字以上にしてください。"
+    );
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .rpc(
+        "change_editor_password",
+        {
+          current_password:
+            currentPassword,
+
+          new_password:
+            newPassword
+        }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "パスワード変更に失敗しました。\n\n" +
+      "エラー内容：\n" +
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  if (!data) {
+
+    alert(
+      "現在のパスワードが違います。"
+    );
+
+    return;
+
+  }
+
+
+  alert(
+    "編集パスワードを変更しました。"
+  );
+
+}
+
 async function unlockEditor() {
 
   const password =
@@ -449,6 +620,20 @@ if (editorModeButton) {
   }
 
 }
+
+  const changePasswordButton =
+  document.getElementById(
+    "changePasswordButton"
+  );
+
+
+if (changePasswordButton) {
+
+  changePasswordButton.style.display =
+    currentRole === "editor"
+      ? "inline-block"
+      : "none";
+
 
   // --------------------------------
   // データ読み込み
