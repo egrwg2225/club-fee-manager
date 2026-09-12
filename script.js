@@ -1774,7 +1774,8 @@ function setupMemberManagement() {
 }
 
 
-async function loadMembers() {
+
+  async function loadMembers() {
 
   if (!currentUser) return;
 
@@ -1806,17 +1807,23 @@ async function loadMembers() {
     (data || []).filter(
       member => {
 
-        // 退部年月が設定されていなければ表示
+        // 退部年月が設定されている部員
         if (
-          !member.left_year_month
+          member.left_year_month
         ) {
-          return true;
+
+          // 表示月が退部月より前なら表示
+          return (
+            displayYearMonth <
+            member.left_year_month
+          );
+
         }
 
-        // 表示している月が退部月より前なら表示
+        // 退部年月がない場合は、
+        // 現在も有効な部員だけ表示
         return (
-          displayYearMonth <
-          member.left_year_month
+          member.active === true
         );
 
       }
@@ -2552,7 +2559,8 @@ async function deactivateMember(
   const currentYearMonth =
     getYearMonth();
 
-  // 今月の部費データを削除
+  // 今月の部費データだけ削除
+  // 過去月の履歴は残す
   const {
     error: feeDeleteError
   } =
@@ -2583,25 +2591,23 @@ async function deactivateMember(
     return;
   }
 
-  // 部員を一覧から退部扱いにする
-  const currentYearMonth =
-  getYearMonth();
-
-const {
-  error
-} =
-  await supabaseClient
-    .from("members")
-    .update({
-      active:
-        false,
-      left_year_month:
-        currentYearMonth
-    })
-    .eq(
-      "id",
-      id
-    );
+  // 部員を退部扱いにする
+  // 削除した月を記録する
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("members")
+      .update({
+        active:
+          false,
+        left_year_month:
+          currentYearMonth
+      })
+      .eq(
+        "id",
+        id
+      );
 
   if (error) {
 
@@ -2614,6 +2620,7 @@ const {
     return;
   }
 
+  // 画面上のデータを更新
   members =
     members.filter(
       member =>
@@ -2626,12 +2633,12 @@ const {
         fee.member_id !== id
     );
 
+  // Supabaseから最新状態を再取得
   await loadMembers();
 
-await calculateTotals();
+  await calculateTotals();
 
 }
-
 // ==============================
 // メニュー
 // ==============================
