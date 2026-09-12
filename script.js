@@ -2486,7 +2486,44 @@ async function deactivateMember(
     return;
   }
 
-  const { error } =
+  const currentYearMonth =
+    getYearMonth();
+
+  // 今月の部費データを削除
+  const {
+    error: feeDeleteError
+  } =
+    await supabaseClient
+      .from("member_fees")
+      .delete()
+      .eq(
+        "member_id",
+        id
+      )
+      .eq(
+        "year_month",
+        currentYearMonth
+      );
+
+  if (feeDeleteError) {
+
+    console.error(
+      feeDeleteError
+    );
+
+    alert(
+      "今月の部費データの削除に失敗しました。\n\n" +
+      "エラー内容：\n" +
+      feeDeleteError.message
+    );
+
+    return;
+  }
+
+  // 部員を一覧から退部扱いにする
+  const {
+    error
+  } =
     await supabaseClient
       .from("members")
       .update({
@@ -2526,7 +2563,6 @@ async function deactivateMember(
   await calculateTotals();
 
 }
-
 
 // ==============================
 // メニュー
