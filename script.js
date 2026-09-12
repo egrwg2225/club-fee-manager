@@ -111,6 +111,7 @@ document.addEventListener(
 
     // 通常の画面機能
     setupLoginButton();
+    setupEditorModeButton();
     setupMonthButtons();
     setupAddRowButton();
     setupCategoryManagement();
@@ -139,7 +140,94 @@ function setupLoginButton() {
   );
 
 }
+// ==============================
+// 編集者モード
+// ==============================
 
+function setupEditorModeButton() {
+
+  const button =
+    document.getElementById(
+      "editorModeButton"
+    );
+
+  if (!button) return;
+
+  button.addEventListener(
+    "click",
+    unlockEditor
+  );
+}
+
+
+async function unlockEditor() {
+
+  const password =
+    prompt(
+      "編集者パスワードを入力してください。"
+    );
+
+
+  if (password === null) {
+    return;
+  }
+
+
+  if (!password) {
+
+    alert(
+      "パスワードを入力してください。"
+    );
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .rpc(
+        "unlock_editor",
+        {
+          input_password:
+            password
+        }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "編集者モードへの切り替えに失敗しました。"
+    );
+
+    return;
+  }
+
+
+  if (!data) {
+
+    alert(
+      "パスワードが違います。"
+    );
+
+    return;
+  }
+
+
+  // 編集者として再判定
+  await loadUserRole();
+
+
+  alert(
+    "編集者モードになりました。"
+  );
+
+}
 
 async function login() {
 
