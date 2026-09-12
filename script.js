@@ -1,5 +1,5 @@
 // ==============================
-// Supabase設定
+// Supabase
 // ==============================
 
 const SUPABASE_URL =
@@ -16,7 +16,7 @@ const supabaseClient =
 
 
 // ==============================
-// 現在の状態
+// 状態
 // ==============================
 
 let currentUser = null;
@@ -31,8 +31,6 @@ let categories = [];
 let members = [];
 let memberFees = [];
 
-
-// 月読み込みの競合防止
 let monthLoadNumber = 0;
 
 
@@ -46,31 +44,20 @@ document.addEventListener(
 
     updateMonthTitle();
 
-    // --------------------------------
-    // 匿名ログイン
-    // --------------------------------
-
     let {
       data: { session }
-    } =
-      await supabaseClient.auth.getSession();
+    } = await supabaseClient.auth.getSession();
 
-
-    // 既存のメールログイン状態が残っている場合
-    // 新しい匿名ログインへ切り替える
+    // 古いメールログインが残っていた場合は解除
     if (
       session &&
       !session.user.is_anonymous
     ) {
-
       await supabaseClient.auth.signOut();
-
       session = null;
-
     }
 
-
-    // セッションがなければ匿名ログイン
+    // 匿名ログイン
     if (!session) {
 
       const {
@@ -79,7 +66,6 @@ document.addEventListener(
       } =
         await supabaseClient.auth
           .signInAnonymously();
-
 
       if (error) {
 
@@ -90,45 +76,29 @@ document.addEventListener(
         );
 
         return;
-
       }
 
-
-      session =
-        data.session;
-
+      session = data.session;
     }
 
+    currentUser = session.user;
 
-    // 現在のユーザー
-    currentUser =
-      session.user;
-
-
-    // 現在の権限を取得
     await loadUserRole();
 
-
-    // 通常の画面機能
     setupEditorModeButton();
-　　　setupMonthButtons();
+    setupMonthButtons();
     setupAddRowButton();
     setupCategoryManagement();
     setupMemberManagement();
-
     setupAutoMemberFeeIncome();
 
   }
 );
 
 
-
-
 // ==============================
 // 編集者モード
 // ==============================
-
-
 
 function setupEditorModeButton() {
 
@@ -144,18 +114,13 @@ function setupEditorModeButton() {
     async () => {
 
       if (currentRole === "editor") {
-
         await lockEditor();
-
       } else {
-
         await unlockEditor();
-
       }
 
     }
   );
-
 
   const changePasswordButton =
     document.getElementById(
@@ -173,6 +138,11 @@ function setupEditorModeButton() {
 
 }
 
+
+// ==============================
+// パスワード変更
+// ==============================
+
 async function changeEditorPassword() {
 
   if (currentRole !== "editor") {
@@ -182,31 +152,21 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   const currentPassword =
     prompt(
       "現在のパスワードを入力してください。"
     );
 
-
-  if (currentPassword === null) {
-    return;
-  }
-
+  if (currentPassword === null) return;
 
   const newPassword =
     prompt(
       "新しいパスワードを入力してください。"
     );
 
-
-  if (newPassword === null) {
-    return;
-  }
-
+  if (newPassword === null) return;
 
   if (!newPassword) {
 
@@ -215,20 +175,14 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   const confirmPassword =
     prompt(
       "新しいパスワードをもう一度入力してください。"
     );
 
-
-  if (confirmPassword === null) {
-    return;
-  }
-
+  if (confirmPassword === null) return;
 
   if (newPassword !== confirmPassword) {
 
@@ -237,9 +191,7 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   if (newPassword.length < 6) {
 
@@ -248,26 +200,21 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   const {
     data,
     error
   } =
-    await supabaseClient
-      .rpc(
-        "change_editor_password",
-        {
-          current_password:
-            currentPassword,
-
-          new_password:
-            newPassword
-        }
-      );
-
+    await supabaseClient.rpc(
+      "change_editor_password",
+      {
+        current_password:
+          currentPassword,
+        new_password:
+          newPassword
+      }
+    );
 
   if (error) {
 
@@ -280,9 +227,7 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   if (!data) {
 
@@ -291,9 +236,7 @@ async function changeEditorPassword() {
     );
 
     return;
-
   }
-
 
   alert(
     "編集パスワードを変更しました。"
@@ -301,77 +244,10 @@ async function changeEditorPassword() {
 
 }
 
-async function unlockEditor() {
 
-  const password =
-    prompt(
-      "編集者パスワードを入力してください。"
-    );
-
-
-  if (password === null) {
-    return;
-  }
-
-
-  if (!password) {
-
-    alert(
-      "パスワードを入力してください。"
-    );
-
-    return;
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .rpc(
-        "unlock_editor",
-        {
-          input_password:
-            password
-        }
-      );
-
-
-  if (error) {
-
-  console.error(error);
-
-  alert(
-    "編集者モードへの切り替えに失敗しました。\n\n" +
-    "エラー内容：\n" +
-    error.message
-  );
-
-  return;
-}
-
-
-  if (!data) {
-
-    alert(
-      "パスワードが違います。"
-    );
-
-    return;
-  }
-
-
-  // 編集者として再判定
-  await loadUserRole();
-
-
-  alert(
-    "編集者モードになりました。"
-  );
-
-}
-
+// ==============================
+// 編集者解除
+// ==============================
 
 async function lockEditor() {
 
@@ -379,9 +255,9 @@ async function lockEditor() {
     data,
     error
   } =
-    await supabaseClient
-      .rpc("lock_editor");
-
+    await supabaseClient.rpc(
+      "lock_editor"
+    );
 
   if (error) {
 
@@ -394,9 +270,7 @@ async function lockEditor() {
     );
 
     return;
-
   }
-
 
   if (!data) {
 
@@ -405,13 +279,9 @@ async function lockEditor() {
     );
 
     return;
-
   }
 
-
-  // 現在の権限を再確認
   await loadUserRole();
-
 
   alert(
     "編集者モードを解除しました。"
@@ -419,33 +289,93 @@ async function lockEditor() {
 
 }
 
+
 // ==============================
-// ロール取得
+// 編集者解除
+// ==============================
+
+async function unlockEditor() {
+
+  const password =
+    prompt(
+      "編集者パスワードを入力してください。"
+    );
+
+  if (password === null) return;
+
+  if (!password) {
+
+    alert(
+      "パスワードを入力してください。"
+    );
+
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient.rpc(
+      "unlock_editor",
+      {
+        input_password:
+          password
+      }
+    );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "編集者モードへの切り替えに失敗しました。\n\n" +
+      "エラー内容：\n" +
+      error.message
+    );
+
+    return;
+  }
+
+  if (!data) {
+
+    alert(
+      "パスワードが違います。"
+    );
+
+    return;
+  }
+
+  await loadUserRole();
+
+  alert(
+    "編集者モードになりました。"
+  );
+
+}
+
+
+// ==============================
+// 権限取得
 // ==============================
 
 async function loadUserRole() {
 
   if (!currentUser) return;
 
-
-  // --------------------------------
-  // 編集者かどうかをSupabaseで確認
-  // --------------------------------
-
   const {
     data,
     error
   } =
-    await supabaseClient
-      .rpc("is_editor");
-
+    await supabaseClient.rpc(
+      "is_editor"
+    );
 
   if (error) {
 
     console.error(error);
 
-    currentRole =
-      "viewer";
+    currentRole = "viewer";
 
   } else {
 
@@ -455,16 +385,6 @@ async function loadUserRole() {
         : "viewer";
 
   }
-
-
-  // --------------------------------
-  // 画面表示
-  // --------------------------------
-
-  const loginSection =
-    document.getElementById(
-      "loginSection"
-    );
 
   const appContent =
     document.getElementById(
@@ -476,22 +396,12 @@ async function loadUserRole() {
       "userRole"
     );
 
-
-  if (loginSection) {
-
-    loginSection.style.display =
-      "none";
-
-  }
-
-
   if (appContent) {
 
     appContent.style.display =
       "block";
 
   }
-
 
   if (userRole) {
 
@@ -501,50 +411,38 @@ async function loadUserRole() {
         : "閲覧者";
 
   }
-const editorModeButton =
-  document.getElementById(
-    "editorModeButton"
-  );
 
+  const editorModeButton =
+    document.getElementById(
+      "editorModeButton"
+    );
 
-if (editorModeButton) {
-
-  if (currentRole === "editor") {
+  if (editorModeButton) {
 
     editorModeButton.textContent =
-      "🔓 編集者モード解除";
-
-  } else {
-
-    editorModeButton.textContent =
-      "🔒 編集者モード";
+      currentRole === "editor"
+        ? "🔓 編集者モード解除"
+        : "🔒 編集者モード";
 
   }
 
-}
-
   const changePasswordButton =
-  document.getElementById(
-    "changePasswordButton"
-  );
+    document.getElementById(
+      "changePasswordButton"
+    );
 
+  if (changePasswordButton) {
 
-if (changePasswordButton) {
+    changePasswordButton.style.display =
+      currentRole === "editor"
+        ? "inline-block"
+        : "none";
 
-  changePasswordButton.style.display =
-    currentRole === "editor"
-      ? "inline-block"
-      : "none";
+  }
 
-
-  // --------------------------------
-  // データ読み込み
-  // --------------------------------
-
+  // ここは必ず実行する
   await loadCategories();
-
   await loadMonth();
-
   await loadMembers();
 
 }
@@ -574,16 +472,13 @@ function setupAutoMemberFeeIncome() {
 
   if (!checkbox) return;
 
-
   const saved =
     localStorage.getItem(
       "autoMemberFeeIncome"
     );
 
-
   checkbox.checked =
     saved === "true";
-
 
   checkbox.addEventListener(
     "change",
@@ -593,7 +488,6 @@ function setupAutoMemberFeeIncome() {
         "autoMemberFeeIncome",
         checkbox.checked
       );
-
 
       await calculateTotals();
 
@@ -610,14 +504,9 @@ function isAutoMemberFeeIncome() {
       "autoMemberFeeIncome"
     );
 
-  if (checkbox) {
-
-    return checkbox.checked;
-
-  }
-
-
-  return false;
+  return checkbox
+    ? checkbox.checked
+    : false;
 
 }
 
@@ -638,30 +527,20 @@ function setupMonthButtons() {
       "nextMonth"
     );
 
-
   if (prev) {
 
     prev.addEventListener(
       "click",
-      async () => {
-
-        changeMonth(-1);
-
-      }
+      () => changeMonth(-1)
     );
 
   }
-
 
   if (next) {
 
     next.addEventListener(
       "click",
-      async () => {
-
-        changeMonth(1);
-
-      }
+      () => changeMonth(1)
     );
 
   }
@@ -669,13 +548,9 @@ function setupMonthButtons() {
 }
 
 
-// 月変更を1か所で管理
-async function changeMonth(
-  direction
-) {
+async function changeMonth(direction) {
 
   currentMonth += direction;
-
 
   if (currentMonth < 1) {
 
@@ -684,7 +559,6 @@ async function changeMonth(
 
   }
 
-
   if (currentMonth > 12) {
 
     currentMonth = 1;
@@ -692,27 +566,19 @@ async function changeMonth(
 
   }
 
-
   updateMonthTitle();
-
 
   const loadNumber =
     ++monthLoadNumber;
 
-
   await loadMonth();
 
-
-  // 古い月読み込み結果なら中断
   if (
     loadNumber !==
     monthLoadNumber
   ) {
-
     return;
-
   }
-
 
   await loadMembers();
 
@@ -728,7 +594,6 @@ function updateMonthTitle() {
 
   if (!title) return;
 
-
   title.textContent =
     `${currentYear}年${currentMonth}月`;
 
@@ -740,25 +605,28 @@ function getYearMonth(
   month = currentMonth
 ) {
 
-  return `${year}-${String(month).padStart(2, "0")}`;
+  return (
+    `${year}-${String(month).padStart(2, "0")}`
+  );
 
 }
 
 
 // ==============================
-// 月データ読み込み
+// 月データ
 // ==============================
 
 async function loadMonth() {
 
   if (!currentUser) return;
 
-
   const yearMonth =
     getYearMonth();
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("transactions")
       .select("*")
@@ -779,22 +647,17 @@ async function loadMonth() {
         }
       );
 
-
   if (error) {
 
     console.error(error);
-
     return;
 
   }
 
-
   transactions =
     data || [];
 
-
   renderTransactions();
-
 
   await calculateTotals();
 
@@ -802,14 +665,17 @@ async function loadMonth() {
 
 
 // ==============================
-// 部費収入取得
+// 支払済部費合計
 // ==============================
 
 async function getPaidMemberFeesTotal(
   yearMonth
 ) {
 
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("member_fees")
       .select("amount")
@@ -822,43 +688,25 @@ async function getPaidMemberFeesTotal(
         true
       );
 
-
   if (error) {
 
     console.error(error);
-
     return 0;
 
   }
 
-
-  let total = 0;
-
-
-  (data || []).forEach(
-    row => {
-
-      total +=
-        Number(row.amount) || 0;
-
-    }
+  return (data || []).reduce(
+    (total, row) =>
+      total +
+      (Number(row.amount) || 0),
+    0
   );
-
-
-  return total;
 
 }
 
 
 // ==============================
-// 前月繰越
-// ==============================
-
-// ★重要
-// currentYear / currentMonthを変更せずに
-// 指定された年月をそのまま計算する
-// ==============================
-// 前月繰越
+// 月残高計算
 // ==============================
 
 async function calculateMonthBalance(
@@ -866,7 +714,6 @@ async function calculateMonthBalance(
   month
 ) {
 
-  // 2026年1月より前は0円
   if (
     year < 2026 ||
     (
@@ -874,19 +721,11 @@ async function calculateMonthBalance(
       month < 1
     )
   ) {
-
     return 0;
-
   }
 
-
-  // 前月
-  let previousYear =
-    year;
-
-  let previousMonth =
-    month - 1;
-
+  let previousYear = year;
+  let previousMonth = month - 1;
 
   if (previousMonth === 0) {
 
@@ -895,23 +734,16 @@ async function calculateMonthBalance(
 
   }
 
-
-  const currentYearMonth =
+  const yearMonth =
     getYearMonth(
       year,
       month
     );
 
-
-  const previousYearMonth =
-    getYearMonth(
-      previousYear,
-      previousMonth
-    );
-
-
-  // 現在月の収支を取得
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("transactions")
       .select(
@@ -919,22 +751,18 @@ async function calculateMonthBalance(
       )
       .eq(
         "year_month",
-        currentYearMonth
+        yearMonth
       );
-
 
   if (error) {
 
     console.error(error);
-
     return 0;
 
   }
 
-
   let income = 0;
   let expense = 0;
-
 
   (data || []).forEach(
     row => {
@@ -948,10 +776,7 @@ async function calculateMonthBalance(
     }
   );
 
-
-  // 部費の自動収入
   let memberFeeIncome = 0;
-
 
   if (
     isAutoMemberFeeIncome()
@@ -959,19 +784,16 @@ async function calculateMonthBalance(
 
     memberFeeIncome =
       await getPaidMemberFeesTotal(
-        currentYearMonth
+        yearMonth
       );
 
   }
 
-
-  // 前月の残高
   const carryOver =
     await calculateMonthBalance(
       previousYear,
       previousMonth
     );
-
 
   return (
     carryOver +
@@ -991,14 +813,12 @@ async function getPreviousMonthBalance() {
   let month =
     currentMonth - 1;
 
-
   if (month === 0) {
 
     month = 12;
     year--;
 
   }
-
 
   return await calculateMonthBalance(
     year,
@@ -1008,18 +828,14 @@ async function getPreviousMonthBalance() {
 }
 
 
-
-
-
 // ==============================
-// 合計計算
+// 合計
 // ==============================
 
 async function calculateTotals() {
 
   let incomeTotal = 0;
   let expenseTotal = 0;
-
 
   transactions.forEach(
     row => {
@@ -1033,9 +849,7 @@ async function calculateTotals() {
     }
   );
 
-
   let memberFeeIncome = 0;
-
 
   if (
     isAutoMemberFeeIncome()
@@ -1048,20 +862,16 @@ async function calculateTotals() {
 
   }
 
-
   incomeTotal +=
     memberFeeIncome;
 
-
   const carryOver =
     await getPreviousMonthBalance();
-
 
   const currentBalance =
     carryOver +
     incomeTotal -
     expenseTotal;
-
 
   const carryElement =
     document.getElementById(
@@ -1083,43 +893,31 @@ async function calculateTotals() {
       "currentBalance"
     );
 
-
   if (carryElement) {
 
     carryElement.textContent =
-      formatYen(
-        carryOver
-      );
+      formatYen(carryOver);
 
   }
-
 
   if (incomeElement) {
 
     incomeElement.textContent =
-      formatYen(
-        incomeTotal
-      );
+      formatYen(incomeTotal);
 
   }
-
 
   if (expenseElement) {
 
     expenseElement.textContent =
-      formatYen(
-        expenseTotal
-      );
+      formatYen(expenseTotal);
 
   }
-
 
   if (balanceElement) {
 
     balanceElement.textContent =
-      formatYen(
-        currentBalance
-      );
+      formatYen(currentBalance);
 
   }
 
@@ -1128,13 +926,15 @@ async function calculateTotals() {
 
 function formatYen(value) {
 
-  return `${Math.round(value).toLocaleString()}円`;
+  return (
+    `${Math.round(value).toLocaleString()}円`
+  );
 
 }
 
 
 // ==============================
-// 収支入力
+// 収支追加
 // ==============================
 
 function setupAddRowButton() {
@@ -1145,7 +945,6 @@ function setupAddRowButton() {
     );
 
   if (!button) return;
-
 
   button.addEventListener(
     "click",
@@ -1164,33 +963,35 @@ async function addTransaction() {
     );
 
     return;
-
   }
-
 
   const yearMonth =
     getYearMonth();
 
-
-  const firstDate =
-    `${yearMonth}-01`;
-
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("transactions")
       .insert({
-        year_month: yearMonth,
-        date: firstDate,
-        category: "",
-        detail: "",
-        income: 0,
-        expense: 0,
-        memo: ""
+        year_month:
+          yearMonth,
+        date:
+          `${yearMonth}-01`,
+        category:
+          "",
+        detail:
+          "",
+        income:
+          0,
+        expense:
+          0,
+        memo:
+          ""
       })
       .select()
       .single();
-
 
   if (error) {
 
@@ -1201,9 +1002,7 @@ async function addTransaction() {
     );
 
     return;
-
   }
-
 
   transactions.push(data);
 
@@ -1227,144 +1026,125 @@ function renderTransactions() {
 
   if (!tbody) return;
 
-
   tbody.innerHTML = "";
-
 
   transactions.forEach(
     row => {
 
       const tr =
-        document.createElement("tr");
-
+        document.createElement(
+          "tr"
+        );
 
       // 日付
       const dateTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const dateInput =
         document.createElement(
           "input"
         );
 
-      dateInput.type =
-        "date";
-
+      dateInput.type = "date";
       dateInput.value =
         row.date || "";
 
       dateInput.disabled =
         !isEditor();
 
-
       dateInput.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "date",
             dateInput.value
-          );
-
-        }
+          )
       );
-
 
       dateTd.appendChild(
         dateInput
       );
 
-
       // 分類
       const categoryTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const categorySelect =
         document.createElement(
           "select"
         );
 
-
       createCategoryOptions(
         categorySelect,
         row.category
       );
 
-
       categorySelect.disabled =
         !isEditor();
 
-
       categorySelect.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "category",
             categorySelect.value
-          );
-
-        }
+          )
       );
-
 
       categoryTd.appendChild(
         categorySelect
       );
 
-
       // 内訳
       const detailTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const detailInput =
         document.createElement(
           "input"
         );
 
-      detailInput.type =
-        "text";
-
+      detailInput.type = "text";
       detailInput.value =
         row.detail || "";
 
       detailInput.disabled =
         !isEditor();
 
-
       detailInput.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "detail",
             detailInput.value
-          );
-
-        }
+          )
       );
-
 
       detailTd.appendChild(
         detailInput
       );
 
-
       // 収入
       const incomeTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const incomeInput =
         document.createElement(
           "input"
         );
 
-      incomeInput.type =
-        "number";
-
+      incomeInput.type = "number";
       incomeInput.inputMode =
         "numeric";
 
@@ -1374,29 +1154,27 @@ function renderTransactions() {
       incomeInput.disabled =
         !isEditor();
 
-
       incomeInput.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "income",
-            Number(incomeInput.value) || 0
-          );
-
-        }
+            Number(
+              incomeInput.value
+            ) || 0
+          )
       );
-
 
       incomeTd.appendChild(
         incomeInput
       );
 
-
       // 支出
       const expenseTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const expenseInput =
         document.createElement(
@@ -1415,68 +1193,59 @@ function renderTransactions() {
       expenseInput.disabled =
         !isEditor();
 
-
       expenseInput.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "expense",
-            Number(expenseInput.value) || 0
-          );
-
-        }
+            Number(
+              expenseInput.value
+            ) || 0
+          )
       );
-
 
       expenseTd.appendChild(
         expenseInput
       );
 
-
       // メモ
       const memoTd =
-        document.createElement("td");
+        document.createElement(
+          "td"
+        );
 
       const memoInput =
         document.createElement(
           "input"
         );
 
-      memoInput.type =
-        "text";
-
+      memoInput.type = "text";
       memoInput.value =
         row.memo || "";
 
       memoInput.disabled =
         !isEditor();
 
-
       memoInput.addEventListener(
         "change",
-        () => {
-
+        () =>
           updateTransaction(
             row.idansactions,
             "memo",
             memoInput.value
-          );
-
-        }
+          )
       );
-
 
       memoTd.appendChild(
         memoInput
       );
 
-
       // 削除
       const deleteTd =
-        document.createElement("td");
-
+        document.createElement(
+          "td"
+        );
 
       if (isEditor()) {
 
@@ -1491,7 +1260,6 @@ function renderTransactions() {
         deleteButton.className =
           "delete-button";
 
-
         deleteButton.addEventListener(
           "click",
           () =>
@@ -1500,13 +1268,11 @@ function renderTransactions() {
             )
         );
 
-
         deleteTd.appendChild(
           deleteButton
         );
 
       }
-
 
       tr.appendChild(dateTd);
       tr.appendChild(categoryTd);
@@ -1515,7 +1281,6 @@ function renderTransactions() {
       tr.appendChild(expenseTd);
       tr.appendChild(memoTd);
       tr.appendChild(deleteTd);
-
 
       tbody.appendChild(tr);
 
@@ -1536,21 +1301,18 @@ function createCategoryOptions(
 
   select.innerHTML = "";
 
-
   const emptyOption =
     document.createElement(
       "option"
     );
 
   emptyOption.value = "";
-
   emptyOption.textContent =
     "選択";
 
   select.appendChild(
     emptyOption
   );
-
 
   categories.forEach(
     category => {
@@ -1566,17 +1328,12 @@ function createCategoryOptions(
       option.textContent =
         category.namemename;
 
-
       if (
         category.namemename ===
         selectedValue
       ) {
-
-        option.selected =
-          true;
-
+        option.selected = true;
       }
-
 
       select.appendChild(
         option
@@ -1588,10 +1345,6 @@ function createCategoryOptions(
 }
 
 
-// ==============================
-// 収支更新
-// ==============================
-
 async function updateTransaction(
   id,
   key,
@@ -1599,7 +1352,6 @@ async function updateTransaction(
 ) {
 
   if (!isEditor()) return;
-
 
   const { error } =
     await supabaseClient
@@ -1612,7 +1364,6 @@ async function updateTransaction(
         id
       );
 
-
   if (error) {
 
     console.error(error);
@@ -1622,9 +1373,7 @@ async function updateTransaction(
     );
 
     return;
-
   }
-
 
   const row =
     transactions.find(
@@ -1632,40 +1381,26 @@ async function updateTransaction(
         item.idansactions === id
     );
 
-
   if (row) {
-
     row[key] = value;
-
   }
-
 
   await calculateTotals();
 
 }
 
 
-// ==============================
-// 収支削除
-// ==============================
-
-async function deleteTransaction(
-  id
-) {
+async function deleteTransaction(id) {
 
   if (!isEditor()) return;
-
 
   if (
     !confirm(
       "この収支を削除しますか？"
     )
   ) {
-
     return;
-
   }
-
 
   const { error } =
     await supabaseClient
@@ -1676,7 +1411,6 @@ async function deleteTransaction(
         id
       );
 
-
   if (error) {
 
     console.error(error);
@@ -1686,16 +1420,13 @@ async function deleteTransaction(
     );
 
     return;
-
   }
-
 
   transactions =
     transactions.filter(
       row =>
         row.idansactions !== id
     );
-
 
   renderTransactions();
 
@@ -1720,7 +1451,6 @@ function setupCategoryManagement() {
       "addCategoryButton"
     );
 
-
   if (manageButton) {
 
     manageButton.addEventListener(
@@ -1732,9 +1462,7 @@ function setupCategoryManagement() {
             "categoryManagement"
           );
 
-
         if (!area) return;
-
 
         area.style.display =
           area.style.display ===
@@ -1746,7 +1474,6 @@ function setupCategoryManagement() {
     );
 
   }
-
 
   if (addButton) {
 
@@ -1762,7 +1489,10 @@ function setupCategoryManagement() {
 
 async function loadCategories() {
 
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("categories")
       .select("*")
@@ -1773,19 +1503,15 @@ async function loadCategories() {
         }
       );
 
-
   if (error) {
 
     console.error(error);
-
     return;
 
   }
 
-
   categories =
     data || [];
-
 
   renderCategoryList();
 
@@ -1801,9 +1527,7 @@ function renderCategoryList() {
 
   if (!list) return;
 
-
   list.innerHTML = "";
-
 
   categories.forEach(
     category => {
@@ -1813,19 +1537,12 @@ function renderCategoryList() {
           "div"
         );
 
-
-      div.style.display =
-        "flex";
-
+      div.style.display = "flex";
       div.style.alignItems =
         "center";
-
-      div.style.gap =
-        "8px";
-
+      div.style.gap = "8px";
       div.style.marginBottom =
         "8px";
-
 
       const text =
         document.createElement(
@@ -1835,9 +1552,7 @@ function renderCategoryList() {
       text.textContent =
         category.namemename;
 
-      text.style.flex =
-        "1";
-
+      text.style.flex = "1";
 
       const deleteButton =
         document.createElement(
@@ -1853,7 +1568,6 @@ function renderCategoryList() {
       deleteButton.disabled =
         !isEditor();
 
-
       deleteButton.addEventListener(
         "click",
         () =>
@@ -1862,9 +1576,10 @@ function renderCategoryList() {
           )
       );
 
-
       div.appendChild(text);
-      div.appendChild(deleteButton);
+      div.appendChild(
+        deleteButton
+      );
 
       list.appendChild(div);
 
@@ -1883,25 +1598,19 @@ async function addCategory() {
     );
 
     return;
-
   }
-
 
   const name =
     prompt(
       "追加する分類名を入力してください。"
     );
 
-
   if (!name) return;
-
 
   const categoryName =
     name.trim();
 
-
   if (!categoryName) return;
-
 
   const exists =
     categories.some(
@@ -1910,7 +1619,6 @@ async function addCategory() {
         categoryName
     );
 
-
   if (exists) {
 
     alert(
@@ -1918,11 +1626,12 @@ async function addCategory() {
     );
 
     return;
-
   }
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("categories")
       .insert({
@@ -1931,7 +1640,6 @@ async function addCategory() {
       })
       .select()
       .single();
-
 
   if (error) {
 
@@ -1942,36 +1650,27 @@ async function addCategory() {
     );
 
     return;
-
   }
-
 
   categories.push(data);
 
   renderCategoryList();
-
   renderTransactions();
 
 }
 
 
-async function deleteCategory(
-  id
-) {
+async function deleteCategory(id) {
 
   if (!isEditor()) return;
-
 
   if (
     !confirm(
       "この分類を削除しますか？\n既存の収支データは削除されません。"
     )
   ) {
-
     return;
-
   }
-
 
   const { error } =
     await supabaseClient
@@ -1982,7 +1681,6 @@ async function deleteCategory(
         id
       );
 
-
   if (error) {
 
     console.error(error);
@@ -1992,9 +1690,7 @@ async function deleteCategory(
     );
 
     return;
-
   }
-
 
   categories =
     categories.filter(
@@ -2002,17 +1698,15 @@ async function deleteCategory(
         category.idid !== id
     );
 
-
   renderCategoryList();
-
   renderTransactions();
 
 }
 
 
-// ==================================================
+// ==============================
 // 部費管理
-// ==================================================
+// ==============================
 
 function setupMemberManagement() {
 
@@ -2020,7 +1714,6 @@ function setupMemberManagement() {
     document.getElementById(
       "addMemberButton"
     );
-
 
   if (addButton) {
 
@@ -2034,13 +1727,14 @@ function setupMemberManagement() {
 }
 
 
-// 部員読み込み
 async function loadMembers() {
 
   if (!currentUser) return;
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("members")
       .select("*")
@@ -2055,19 +1749,15 @@ async function loadMembers() {
         }
       );
 
-
   if (error) {
 
     console.error(error);
-
     return;
 
   }
 
-
   members =
     data || [];
-
 
   await prepareMemberFees();
 
@@ -2076,14 +1766,15 @@ async function loadMembers() {
 }
 
 
-// 月ごとの部費データ
 async function prepareMemberFees() {
 
   const yearMonth =
     getYearMonth();
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("member_fees")
       .select("*")
@@ -2092,21 +1783,16 @@ async function prepareMemberFees() {
         yearMonth
       );
 
-
   if (error) {
 
     console.error(error);
-
     return;
 
   }
 
-
   memberFees =
     data || [];
 
-
-  // 当月のデータが存在しない部員だけ作成
   if (isEditor()) {
 
     for (
@@ -2120,31 +1806,28 @@ async function prepareMemberFees() {
             member.id
         );
 
-
       if (exists) continue;
 
-
-      const { data: newFee,
-              error: insertError } =
+      const {
+        data: newFee,
+        error: insertError
+      } =
         await supabaseClient
           .from("member_fees")
           .insert({
             member_id:
               member.id,
-
             year_month:
               yearMonth,
-
             amount:
               Number(
                 member.monthly_fee
               ) || 0,
-
-            paid: false
+            paid:
+              false
           })
           .select()
           .single();
-
 
       if (insertError) {
 
@@ -2153,9 +1836,7 @@ async function prepareMemberFees() {
         );
 
         continue;
-
       }
-
 
       memberFees.push(
         newFee
@@ -2168,7 +1849,6 @@ async function prepareMemberFees() {
 }
 
 
-// 部員一覧表示
 function renderMembers() {
 
   const tbody =
@@ -2178,9 +1858,7 @@ function renderMembers() {
 
   if (!tbody) return;
 
-
   tbody.innerHTML = "";
-
 
   members.forEach(
     member => {
@@ -2190,11 +1868,7 @@ function renderMembers() {
           "tr"
         );
 
-
-      // ==========================
       // 部員名
-      // ==========================
-
       const nameTd =
         document.createElement(
           "td"
@@ -2205,15 +1879,12 @@ function renderMembers() {
           "input"
         );
 
-      nameInput.type =
-        "text";
-
+      nameInput.type = "text";
       nameInput.value =
         member.name || "";
 
       nameInput.disabled =
         !isEditor();
-
 
       nameInput.addEventListener(
         "change",
@@ -2225,16 +1896,11 @@ function renderMembers() {
           )
       );
 
-
       nameTd.appendChild(
         nameInput
       );
 
-
-      // ==========================
-      // 月ごとの部費
-      // ==========================
-
+      // 月額部費
       const feeTd =
         document.createElement(
           "td"
@@ -2245,16 +1911,10 @@ function renderMembers() {
           "input"
         );
 
-      feeInput.type =
-        "number";
-
+      feeInput.type = "number";
       feeInput.inputMode =
         "numeric";
 
-
-      // ★ここが重要
-      // member.monthly_feeではなく
-      // 現在月のmember_fees.amountを表示
       const currentFee =
         memberFees.find(
           fee =>
@@ -2262,17 +1922,14 @@ function renderMembers() {
             member.id
         );
 
-
       feeInput.value =
         Number(
           currentFee?.amount ??
           member.monthly_fee
         ) || 0;
 
-
       feeInput.disabled =
         !isEditor();
-
 
       feeInput.addEventListener(
         "change",
@@ -2285,21 +1942,15 @@ function renderMembers() {
           )
       );
 
-
       feeTd.appendChild(
         feeInput
       );
 
-
-      // ==========================
       // 支払い
-      // ==========================
-
       const paymentTd =
         document.createElement(
           "td"
         );
-
 
       const fee =
         memberFees.find(
@@ -2308,12 +1959,10 @@ function renderMembers() {
             member.id
         );
 
-
       const paymentButton =
         document.createElement(
           "button"
         );
-
 
       if (fee?.paid) {
 
@@ -2333,10 +1982,8 @@ function renderMembers() {
 
       }
 
-
       paymentButton.disabled =
         !isEditor();
-
 
       paymentButton.addEventListener(
         "click",
@@ -2346,21 +1993,15 @@ function renderMembers() {
           )
       );
 
-
       paymentTd.appendChild(
         paymentButton
       );
 
-
-      // ==========================
       // 削除
-      // ==========================
-
       const actionTd =
         document.createElement(
           "td"
         );
-
 
       if (isEditor()) {
 
@@ -2375,7 +2016,6 @@ function renderMembers() {
         deleteButton.className =
           "delete-button";
 
-
         deleteButton.addEventListener(
           "click",
           () =>
@@ -2384,34 +2024,26 @@ function renderMembers() {
             )
         );
 
-
         actionTd.appendChild(
           deleteButton
         );
 
       }
 
-
       tr.appendChild(nameTd);
       tr.appendChild(feeTd);
       tr.appendChild(paymentTd);
       tr.appendChild(actionTd);
-
 
       tbody.appendChild(tr);
 
     }
   );
 
-
   renderMemberSummary();
 
 }
 
-
-// ==============================
-// 部費集計
-// ==============================
 
 function renderMemberSummary() {
 
@@ -2422,11 +2054,9 @@ function renderMemberSummary() {
 
   if (!area) return;
 
-
   let expected = 0;
   let paid = 0;
   let unpaid = 0;
-
 
   members.forEach(
     member => {
@@ -2438,51 +2068,36 @@ function renderMemberSummary() {
             member.id
         );
 
-
       const amount =
         Number(
           fee?.amount ??
           member.monthly_fee
         ) || 0;
 
-
-      expected +=
-        amount;
-
+      expected += amount;
 
       if (fee?.paid) {
-
-        paid +=
-          amount;
-
+        paid += amount;
       } else {
-
-        unpaid +=
-          amount;
-
+        unpaid += amount;
       }
 
     }
   );
 
-
   area.innerHTML = `
-    <div style="margin-top:15px;padding:15px;background:white;border-radius:10px;">
-      <strong>今月の部費</strong><br>
-      請求予定：${formatYen(expected)}
-     　
-      支払済：${formatYen(paid)}
-     　
-      未払い：${formatYen(unpaid)}
-    </div>
-  `;
+<div style="margin-top:15px;padding:15px;background:white;border-radius:10px;">
+<strong>今月の部費</strong><br>
+請求予定：${formatYen(expected)}
+　
+支払済：${formatYen(paid)}
+　
+未払い：${formatYen(unpaid)}
+</div>
+`;
 
 }
 
-
-// ==============================
-// 部員追加
-// ==============================
 
 async function addMember() {
 
@@ -2493,25 +2108,19 @@ async function addMember() {
     );
 
     return;
-
   }
-
 
   const name =
     prompt(
       "部員名を入力してください。"
     );
 
-
   if (!name) return;
-
 
   const memberName =
     name.trim();
 
-
   if (!memberName) return;
-
 
   const feeText =
     prompt(
@@ -2519,13 +2128,10 @@ async function addMember() {
       "2000"
     );
 
-
   if (feeText === null) return;
-
 
   const monthlyFee =
     Number(feeText);
-
 
   if (
     !Number.isFinite(
@@ -2539,26 +2145,24 @@ async function addMember() {
     );
 
     return;
-
   }
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("members")
       .insert({
         name:
           memberName,
-
         monthly_fee:
           monthlyFee,
-
         active:
           true
       })
       .select()
       .single();
-
 
   if (error) {
 
@@ -2569,34 +2173,28 @@ async function addMember() {
     );
 
     return;
-
   }
-
 
   members.push(data);
 
-
-  // 今月分
-  const { data: feeData,
-          error: feeError } =
+  const {
+    data: feeData,
+    error: feeError
+  } =
     await supabaseClient
       .from("member_fees")
       .insert({
         member_id:
           data.id,
-
         year_month:
           getYearMonth(),
-
         amount:
           monthlyFee,
-
         paid:
           false
       })
       .select()
       .single();
-
 
   if (feeError) {
 
@@ -2612,7 +2210,6 @@ async function addMember() {
 
   }
 
-
   renderMembers();
 
   await calculateTotals();
@@ -2621,7 +2218,7 @@ async function addMember() {
 
 
 // ==============================
-// 部員名更新
+// 部員名変更
 // ==============================
 
 async function updateMember(
@@ -2632,10 +2229,8 @@ async function updateMember(
 
   if (!isEditor()) return;
 
-
   value =
     value.trim();
-
 
   if (!value) {
 
@@ -2646,22 +2241,18 @@ async function updateMember(
     await loadMembers();
 
     return;
-
   }
-
 
   const { error } =
     await supabaseClient
       .from("members")
       .update({
-        [key]:
-          value
+        [key]: value
       })
       .eq(
         "id",
         id
       );
-
 
   if (error) {
 
@@ -2672,9 +2263,7 @@ async function updateMember(
     );
 
     return;
-
   }
-
 
   const member =
     members.find(
@@ -2682,19 +2271,15 @@ async function updateMember(
         item.id === id
     );
 
-
   if (member) {
-
-    member[key] =
-      value;
-
+    member[key] = value;
   }
 
 }
 
 
 // ==============================
-// 現在月の部費変更
+// 部費変更
 // ==============================
 
 async function updateMemberFee(
@@ -2703,7 +2288,6 @@ async function updateMemberFee(
 ) {
 
   if (!isEditor()) return;
-
 
   if (
     !Number.isFinite(amount) ||
@@ -2717,9 +2301,7 @@ async function updateMemberFee(
     await loadMembers();
 
     return;
-
   }
-
 
   const currentFee =
     memberFees.find(
@@ -2728,7 +2310,6 @@ async function updateMemberFee(
         memberId
     );
 
-
   if (!currentFee) {
 
     alert(
@@ -2736,30 +2317,26 @@ async function updateMemberFee(
     );
 
     return;
-
   }
 
-
-  // ★現在月の部費だけ変更
   const currentYearMonth =
-  getYearMonth();
+    getYearMonth();
 
-const { error } =
-  await supabaseClient
-    .from("member_fees")
-    .update({
-      amount:
-        amount
-    })
-    .eq(
-      "member_id",
-      memberId
-    )
-    .gte(
-      "year_month",
-      currentYearMonth
-    );
-
+  const { error } =
+    await supabaseClient
+      .from("member_fees")
+      .update({
+        amount:
+          amount
+      })
+      .eq(
+        "member_id",
+        memberId
+      )
+      .gte(
+        "year_month",
+        currentYearMonth
+      );
 
   if (error) {
 
@@ -2770,16 +2347,11 @@ const { error } =
     );
 
     return;
-
   }
-
 
   currentFee.amount =
     amount;
 
-
-  // 今後新しく作られる月の
-  // 初期値としてマスターも変更
   const member =
     members.find(
       item =>
@@ -2787,11 +2359,11 @@ const { error } =
         memberId
     );
 
-
   if (member) {
 
-    const { error:
-      memberError } =
+    const {
+      error: memberError
+    } =
       await supabaseClient
         .from("members")
         .update({
@@ -2802,7 +2374,6 @@ const { error } =
           "id",
           memberId
         );
-
 
     if (memberError) {
 
@@ -2819,7 +2390,6 @@ const { error } =
 
   }
 
-
   renderMembers();
 
   await calculateTotals();
@@ -2828,7 +2398,7 @@ const { error } =
 
 
 // ==============================
-// 支払済／未払い
+// 支払済 / 未払い
 // ==============================
 
 async function toggleMemberPayment(
@@ -2837,14 +2407,12 @@ async function toggleMemberPayment(
 
   if (!isEditor()) return;
 
-
   const fee =
     memberFees.find(
       item =>
         item.member_id ===
         memberId
     );
-
 
   if (!fee) {
 
@@ -2853,13 +2421,10 @@ async function toggleMemberPayment(
     );
 
     return;
-
   }
-
 
   const newPaid =
     !fee.paid;
-
 
   const { error } =
     await supabaseClient
@@ -2867,7 +2432,6 @@ async function toggleMemberPayment(
       .update({
         paid:
           newPaid,
-
         paid_at:
           newPaid
             ? new Date().toISOString()
@@ -2878,7 +2442,6 @@ async function toggleMemberPayment(
         fee.id
       );
 
-
   if (error) {
 
     console.error(error);
@@ -2888,19 +2451,15 @@ async function toggleMemberPayment(
     );
 
     return;
-
   }
-
 
   fee.paid =
     newPaid;
-
 
   fee.paid_at =
     newPaid
       ? new Date().toISOString()
       : null;
-
 
   renderMembers();
 
@@ -2910,7 +2469,7 @@ async function toggleMemberPayment(
 
 
 // ==============================
-// 部員を一覧から削除
+// 部員削除
 // ==============================
 
 async function deactivateMember(
@@ -2919,17 +2478,13 @@ async function deactivateMember(
 
   if (!isEditor()) return;
 
-
   if (
     !confirm(
       "この部員を一覧から削除しますか？\n過去の部費履歴は残ります。"
     )
   ) {
-
     return;
-
   }
-
 
   const { error } =
     await supabaseClient
@@ -2943,7 +2498,6 @@ async function deactivateMember(
         id
       );
 
-
   if (error) {
 
     console.error(error);
@@ -2953,9 +2507,7 @@ async function deactivateMember(
     );
 
     return;
-
   }
-
 
   members =
     members.filter(
@@ -2963,13 +2515,11 @@ async function deactivateMember(
         member.id !== id
     );
 
-
   memberFees =
     memberFees.filter(
       fee =>
         fee.member_id !== id
     );
-
 
   renderMembers();
 
@@ -2999,30 +2549,20 @@ function showIncomeExpense() {
       "summarySection"
     );
 
-
   if (incomeSection) {
-
     incomeSection.style.display =
       "block";
-
   }
-
 
   if (membersSection) {
-
     membersSection.style.display =
       "none";
-
   }
-
 
   if (summarySection) {
-
     summarySection.style.display =
       "none";
-
   }
-
 
   incomeSection?.scrollIntoView({
     behavior:
@@ -3049,33 +2589,22 @@ async function showMembers() {
       "summarySection"
     );
 
-
   if (incomeSection) {
-
     incomeSection.style.display =
       "none";
-
   }
-
 
   if (summarySection) {
-
     summarySection.style.display =
       "none";
-
   }
-
 
   if (membersSection) {
-
     membersSection.style.display =
       "block";
-
   }
 
-
   await loadMembers();
-
 
   membersSection?.scrollIntoView({
     behavior:
@@ -3084,19 +2613,15 @@ async function showMembers() {
 
 }
 
-// ==================================================
+
+// ==============================
 // 月別集計
-// ==================================================
+// ==============================
 
 async function renderSummary() {
 
-  // --------------------------
-  // 基本データ
-  // --------------------------
-
   let incomeTotal = 0;
   let expenseTotal = 0;
-
 
   transactions.forEach(
     row => {
@@ -3110,15 +2635,9 @@ async function renderSummary() {
     }
   );
 
-
-  // --------------------------
-  // 部費
-  // --------------------------
-
   let feeExpected = 0;
   let feePaid = 0;
   let feeUnpaid = 0;
-
 
   members.forEach(
     member => {
@@ -3130,67 +2649,38 @@ async function renderSummary() {
             member.id
         );
 
-
       const amount =
         Number(
           fee?.amount ??
           member.monthly_fee
         ) || 0;
 
-
       feeExpected +=
         amount;
 
-
       if (fee?.paid) {
-
-        feePaid +=
-          amount;
-
+        feePaid += amount;
       } else {
-
-        feeUnpaid +=
-          amount;
-
+        feeUnpaid += amount;
       }
 
     }
   );
 
-
-  // --------------------------
-  // 部費を収入に含めるか
-  // --------------------------
-
   const autoMemberFee =
     isAutoMemberFeeIncome();
 
-
   if (autoMemberFee) {
-
-    incomeTotal +=
-      feePaid;
-
+    incomeTotal += feePaid;
   }
-
-
-  // --------------------------
-  // 前月繰越
-  // --------------------------
 
   const carryOver =
     await getPreviousMonthBalance();
-
 
   const currentBalance =
     carryOver +
     incomeTotal -
     expenseTotal;
-
-
-  // --------------------------
-  // 基本金額表示
-  // --------------------------
 
   const carryElement =
     document.getElementById(
@@ -3212,53 +2702,28 @@ async function renderSummary() {
       "summaryBalance"
     );
 
-
   if (carryElement) {
-
     carryElement.textContent =
-      formatYen(
-        carryOver
-      );
-
+      formatYen(carryOver);
   }
-
 
   if (incomeElement) {
-
     incomeElement.textContent =
-      formatYen(
-        incomeTotal
-      );
-
+      formatYen(incomeTotal);
   }
-
 
   if (expenseElement) {
-
     expenseElement.textContent =
-      formatYen(
-        expenseTotal
-      );
-
+      formatYen(expenseTotal);
   }
-
 
   if (balanceElement) {
-
     balanceElement.textContent =
-      formatYen(
-        currentBalance
-      );
-
+      formatYen(currentBalance);
   }
 
-
-  // --------------------------
-  // 収入の分類別集計
-  // --------------------------
-
+  // 収入分類
   const incomeMap = {};
-
 
   transactions.forEach(
     row => {
@@ -3266,30 +2731,19 @@ async function renderSummary() {
       const amount =
         Number(row.income) || 0;
 
-
       if (amount <= 0) return;
-
 
       const category =
         row.category?.trim() ||
         "未分類";
 
-
-      if (!incomeMap[category]) {
-
-        incomeMap[category] = 0;
-
-      }
-
-
-      incomeMap[category] +=
+      incomeMap[category] =
+        (incomeMap[category] || 0) +
         amount;
 
     }
   );
 
-
-  // 部費を自動収入にしている場合
   if (
     autoMemberFee &&
     feePaid > 0
@@ -3301,20 +2755,14 @@ async function renderSummary() {
 
   }
 
-
   renderSummaryBreakdown(
     "summaryIncomeBreakdown",
     incomeMap,
     "収入はありません。"
   );
 
-
-  // --------------------------
-  // 支出の分類別集計
-  // --------------------------
-
+  // 支出分類
   const expenseMap = {};
-
 
   transactions.forEach(
     row => {
@@ -3322,39 +2770,24 @@ async function renderSummary() {
       const amount =
         Number(row.expense) || 0;
 
-
       if (amount <= 0) return;
-
 
       const category =
         row.category?.trim() ||
         "未分類";
 
-
-      if (!expenseMap[category]) {
-
-        expenseMap[category] = 0;
-
-      }
-
-
-      expenseMap[category] +=
+      expenseMap[category] =
+        (expenseMap[category] || 0) +
         amount;
 
     }
   );
-
 
   renderSummaryBreakdown(
     "summaryExpenseBreakdown",
     expenseMap,
     "支出はありません。"
   );
-
-
-  // --------------------------
-  // 部費状況
-  // --------------------------
 
   const expectedElement =
     document.getElementById(
@@ -3371,42 +2804,23 @@ async function renderSummary() {
       "summaryFeeUnpaid"
     );
 
-
   if (expectedElement) {
-
     expectedElement.textContent =
-      formatYen(
-        feeExpected
-      );
-
+      formatYen(feeExpected);
   }
-
 
   if (paidElement) {
-
     paidElement.textContent =
-      formatYen(
-        feePaid
-      );
-
+      formatYen(feePaid);
   }
 
-
   if (unpaidElement) {
-
     unpaidElement.textContent =
-      formatYen(
-        feeUnpaid
-      );
-
+      formatYen(feeUnpaid);
   }
 
 }
 
-
-// ==============================
-// 集計内訳表示
-// ==============================
 
 function renderSummaryBreakdown(
   elementId,
@@ -3419,35 +2833,25 @@ function renderSummaryBreakdown(
       elementId
     );
 
-
   if (!area) return;
-
 
   const entries =
     Object.entries(data);
 
-
-  if (
-    entries.length === 0
-  ) {
+  if (!entries.length) {
 
     area.textContent =
       emptyMessage;
 
     return;
-
   }
 
-
-  // 金額の大きい順
   entries.sort(
     (a, b) =>
       b[1] - a[1]
   );
 
-
   area.innerHTML = "";
-
 
   entries.forEach(
     ([category, amount]) => {
@@ -3457,10 +2861,8 @@ function renderSummaryBreakdown(
           "div"
         );
 
-
       row.className =
         "summary-row";
-
 
       const name =
         document.createElement(
@@ -3470,35 +2872,24 @@ function renderSummaryBreakdown(
       name.textContent =
         category;
 
-
       const value =
         document.createElement(
           "strong"
         );
 
       value.textContent =
-        formatYen(
-          amount
-        );
+        formatYen(amount);
 
+      row.appendChild(name);
+      row.appendChild(value);
 
-      row.appendChild(
-        name
-      );
-
-      row.appendChild(
-        value
-      );
-
-
-      area.appendChild(
-        row
-      );
+      area.appendChild(row);
 
     }
   );
 
 }
+
 
 async function showSummary() {
 
@@ -3517,33 +2908,22 @@ async function showSummary() {
       "summarySection"
     );
 
-
   if (incomeSection) {
-
     incomeSection.style.display =
       "none";
-
   }
-
 
   if (membersSection) {
-
     membersSection.style.display =
       "none";
-
   }
-
 
   if (summarySection) {
-
     summarySection.style.display =
       "block";
-
   }
 
-
   await renderSummary();
-
 
   summarySection?.scrollIntoView({
     behavior:
@@ -3552,9 +2932,10 @@ async function showSummary() {
 
 }
 
-// ==================================================
-// A4 PDF出力
-// ==================================================
+
+// ==============================
+// A4 PDF
+// ==============================
 
 async function exportPDF() {
 
@@ -3573,54 +2954,28 @@ async function exportPDF() {
       "summarySection"
     );
 
-
   if (incomeSection) {
-
     incomeSection.style.display =
       "none";
-
   }
-
 
   if (membersSection) {
-
     membersSection.style.display =
       "none";
-
   }
-
 
   if (summarySection) {
-
     summarySection.style.display =
       "block";
-
   }
-
-
-  // --------------------------
-  // PDF用の収支明細を作成
-  // --------------------------
 
   createPDFTransactionTable();
 
-
-  // --------------------------
-  // 集計内容を最新状態にする
-  // --------------------------
-
   await renderSummary();
-
-
-  // --------------------------
-  // 少し待ってから印刷
-  // --------------------------
 
   setTimeout(
     () => {
-
       window.print();
-
     },
     300
   );
@@ -3628,9 +2983,9 @@ async function exportPDF() {
 }
 
 
-// ==================================================
-// PDF用 収支明細
-// ==================================================
+// ==============================
+// PDF収支明細
+// ==============================
 
 function createPDFTransactionTable() {
 
@@ -3639,50 +2994,35 @@ function createPDFTransactionTable() {
       "summarySection"
     );
 
-
   if (!summarySection) return;
 
-
-  // 既に作成済みなら削除
   const oldTable =
     document.getElementById(
       "pdfTransactionSection"
     );
 
-
   if (oldTable) {
-
     oldTable.remove();
-
   }
-
 
   const section =
     document.createElement(
       "div"
     );
 
-
   section.id =
     "pdfTransactionSection";
-
 
   const title =
     document.createElement(
       "h3"
     );
 
-
   title.textContent =
     "収支明細";
 
+  section.appendChild(title);
 
-  section.appendChild(
-    title
-  );
-
-
-  // 明細がない場合
   if (
     !transactions ||
     transactions.length === 0
@@ -3710,26 +3050,18 @@ function createPDFTransactionTable() {
         "table"
       );
 
-
     table.className =
       "pdf-transaction-table";
-
-
-    // --------------------------
-    // 見出し
-    // --------------------------
 
     const thead =
       document.createElement(
         "thead"
       );
 
-
     const headerRow =
       document.createElement(
         "tr"
       );
-
 
     [
       "日付",
@@ -3749,33 +3081,23 @@ function createPDFTransactionTable() {
         th.textContent =
           text;
 
-        headerRow.appendChild(
-          th
-        );
+        headerRow.appendChild(th);
 
       }
     );
-
 
     thead.appendChild(
       headerRow
     );
 
-
     table.appendChild(
       thead
     );
-
-
-    // --------------------------
-    // 明細
-    // --------------------------
 
     const tbody =
       document.createElement(
         "tbody"
       );
-
 
     transactions.forEach(
       row => {
@@ -3785,8 +3107,6 @@ function createPDFTransactionTable() {
             "tr"
           );
 
-
-        // 日付
         const dateTd =
           document.createElement(
             "td"
@@ -3797,8 +3117,6 @@ function createPDFTransactionTable() {
             row.date
           );
 
-
-        // 分類
         const categoryTd =
           document.createElement(
             "td"
@@ -3808,8 +3126,6 @@ function createPDFTransactionTable() {
           row.category?.trim() ||
           "未分類";
 
-
-        // 内訳
         const detailTd =
           document.createElement(
             "td"
@@ -3819,8 +3135,6 @@ function createPDFTransactionTable() {
           row.detail?.trim() ||
           "";
 
-
-        // 収入
         const incomeTd =
           document.createElement(
             "td"
@@ -3834,8 +3148,6 @@ function createPDFTransactionTable() {
             ? formatYen(income)
             : "";
 
-
-        // 支出
         const expenseTd =
           document.createElement(
             "td"
@@ -3849,8 +3161,6 @@ function createPDFTransactionTable() {
             ? formatYen(expense)
             : "";
 
-
-        // メモ
         const memoTd =
           document.createElement(
             "td"
@@ -3859,7 +3169,6 @@ function createPDFTransactionTable() {
         memoTd.textContent =
           row.memo?.trim() ||
           "";
-
 
         tr.appendChild(
           dateTd
@@ -3885,7 +3194,6 @@ function createPDFTransactionTable() {
           memoTd
         );
 
-
         tbody.appendChild(
           tr
         );
@@ -3893,11 +3201,9 @@ function createPDFTransactionTable() {
       }
     );
 
-
     table.appendChild(
       tbody
     );
-
 
     section.appendChild(
       table
@@ -3905,13 +3211,10 @@ function createPDFTransactionTable() {
 
   }
 
-
-  // summaryContentの後ろに追加
   const summaryContent =
     document.getElementById(
       "summaryContent"
     );
-
 
   if (summaryContent) {
 
@@ -3930,27 +3233,23 @@ function createPDFTransactionTable() {
 }
 
 
-// ==================================================
-// PDF用 日付表示
-// ==================================================
+// ==============================
+// PDF日付
+// ==============================
 
-function formatPDFDate(
-  date
-) {
+function formatPDFDate(date) {
 
   if (!date) return "";
 
   const parts =
     date.split("-");
 
-
   if (parts.length !== 3) {
-
     return date;
-
   }
 
-
-  return `${Number(parts[1])}/${Number(parts[2])}`;
+  return (
+    `${Number(parts[1])}/${Number(parts[2])}`
+  );
 
 }
