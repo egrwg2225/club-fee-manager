@@ -2584,19 +2584,24 @@ async function deactivateMember(
   }
 
   // 部員を一覧から退部扱いにする
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("members")
-      .update({
-        active:
-          false
-      })
-      .eq(
-        "id",
-        id
-      );
+  const currentYearMonth =
+  getYearMonth();
+
+const {
+  error
+} =
+  await supabaseClient
+    .from("members")
+    .update({
+      active:
+        false,
+      left_year_month:
+        currentYearMonth
+    })
+    .eq(
+      "id",
+      id
+    );
 
   if (error) {
 
