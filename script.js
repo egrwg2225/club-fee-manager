@@ -672,6 +672,29 @@ async function getPaidMemberFeesTotal(
   yearMonth
 ) {
 
+  // 現在表示している月の場合は、
+  // 現在の部員だけを対象にする
+  if (
+    yearMonth ===
+    getYearMonth()
+  ) {
+
+    return memberFees
+      .filter(
+        fee =>
+          fee.paid === true
+      )
+      .reduce(
+        (total, fee) =>
+          total +
+          (Number(fee.amount) || 0),
+        0
+      );
+
+  }
+
+  // 過去月は履歴として保存されている
+  // 支払済み部費をそのまま使用する
   const {
     data,
     error
@@ -691,6 +714,7 @@ async function getPaidMemberFeesTotal(
   if (error) {
 
     console.error(error);
+
     return 0;
 
   }
