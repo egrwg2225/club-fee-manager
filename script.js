@@ -83,15 +83,14 @@ document.addEventListener(
 
     currentUser = session.user;
 
-    await loadUserRole();
-
     setupEditorModeButton();
-    setupMonthButtons();
-    setupAddRowButton();
-    setupCategoryManagement();
-    setupMemberManagement();
-    setupAutoMemberFeeIncome();
+setupMonthButtons();
+setupAddRowButton();
+setupCategoryManagement();
+setupMemberManagement();
+setupAutoMemberFeeIncome();
 
+await loadUserRole();
   }
 );
 
