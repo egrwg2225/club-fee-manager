@@ -672,13 +672,25 @@ async function getPaidMemberFeesTotal(
   yearMonth
 ) {
 
-  // 現在の月の場合
+  // 実際の現在年月を取得
+  const now = new Date();
+
+  const actualYear =
+    now.getFullYear();
+
+  const actualMonth =
+    now.getMonth() + 1;
+
+  const actualYearMonth =
+    `${actualYear}-${String(actualMonth).padStart(2, "0")}`;
+
+  // 実際の今月の場合
+  // 現在有効な部員だけを対象にする
   if (
     yearMonth ===
-    getYearMonth()
+    actualYearMonth
   ) {
 
-    // 現在存在している部員だけを対象にする
     const activeMemberIds =
       new Set(
         members.map(
@@ -704,7 +716,8 @@ async function getPaidMemberFeesTotal(
 
   }
 
-  // 過去月は保存されている履歴を使用
+  // 過去月は保存されている
+  // 部費履歴をそのまま使用
   const {
     data,
     error
