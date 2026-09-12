@@ -1785,10 +1785,6 @@ async function loadMembers() {
     await supabaseClient
       .from("members")
       .select("*")
-      .eq(
-        "active",
-        true
-      )
       .order(
         "created_at",
         {
@@ -1803,8 +1799,28 @@ async function loadMembers() {
 
   }
 
+  const displayYearMonth =
+    getYearMonth();
+
   members =
-    data || [];
+    (data || []).filter(
+      member => {
+
+        // 退部年月が設定されていなければ表示
+        if (
+          !member.left_year_month
+        ) {
+          return true;
+        }
+
+        // 表示している月が退部月より前なら表示
+        return (
+          displayYearMonth <
+          member.left_year_month
+        );
+
+      }
+    );
 
   await prepareMemberFees();
 
