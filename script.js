@@ -616,30 +616,17 @@ function getYearMonth(
 // 月データ
 // ==============================
 
-async function loadMonth() {
+async function loadMembers() {
 
   if (!currentUser) return;
-
-  const yearMonth =
-    getYearMonth();
 
   const {
     data,
     error
   } =
     await supabaseClient
-      .from("transactions")
+      .from("members")
       .select("*")
-      .eq(
-        "year_month",
-        yearMonth
-      )
-      .order(
-        "date",
-        {
-          ascending: true
-        }
-      )
       .order(
         "created_at",
         {
@@ -654,15 +641,47 @@ async function loadMonth() {
 
   }
 
-  transactions =
-    data || [];
+  const displayYearMonth =
+    getYearMonth();
 
-  renderTransactions();
+  members =
+    (data || []).filter(
+      member => {
 
-  await calculateTotals();
+        // 入部年月が設定されている場合
+        // 入部月より前は表示しない
+        if (
+          member.joined_year_month &&
+          displayYearMonth <
+          member.joined_year_month
+        ) {
+          return false;
+        }
+
+        // 退部年月が設定されている場合
+        // 退部月以降は表示しない
+        if (
+          member.left_year_month &&
+          displayYearMonth >=
+          member.left_year_month
+        ) {
+          return false;
+        }
+
+        // 入部・退部の履歴情報がない
+        // 旧データは active を使用
+        return (
+          member.active === true
+        );
+
+      }
+    );
+
+  await prepareMemberFees();
+
+  renderMembers();
 
 }
-
 
 // ==============================
 // 支払済部費合計
