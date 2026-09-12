@@ -46,18 +46,70 @@ document.addEventListener(
 
     updateMonthTitle();
 
-    const {
+    // --------------------------------
+    // 匿名ログイン
+    // --------------------------------
+
+    let {
       data: { session }
-    } = await supabaseClient.auth.getSession();
+    } =
+      await supabaseClient.auth.getSession();
 
-    if (session) {
 
-      currentUser = session.user;
+    // 既存のメールログイン状態が残っている場合
+    // 新しい匿名ログインへ切り替える
+    if (
+      session &&
+      !session.user.is_anonymous
+    ) {
 
-      await loadUserRole();
+      await supabaseClient.auth.signOut();
+
+      session = null;
 
     }
 
+
+    // セッションがなければ匿名ログイン
+    if (!session) {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth
+          .signInAnonymously();
+
+
+      if (error) {
+
+        console.error(error);
+
+        alert(
+          "アプリへの接続に失敗しました。"
+        );
+
+        return;
+
+      }
+
+
+      session =
+        data.session;
+
+    }
+
+
+    // 現在のユーザー
+    currentUser =
+      session.user;
+
+
+    // 現在の権限を取得
+    await loadUserRole();
+
+
+    // 通常の画面機能
     setupLoginButton();
     setupMonthButtons();
     setupAddRowButton();
