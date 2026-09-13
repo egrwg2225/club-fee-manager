@@ -471,9 +471,15 @@ function setupAutoMemberFeeIncome() {
 
   if (!checkbox) return;
 
+  const yearMonth =
+    getYearMonth();
+
+  const storageKey =
+    `autoMemberFeeIncome_${yearMonth}`;
+
   const saved =
     localStorage.getItem(
-      "autoMemberFeeIncome"
+      storageKey
     );
 
   checkbox.checked =
@@ -484,7 +490,7 @@ function setupAutoMemberFeeIncome() {
     async () => {
 
       localStorage.setItem(
-        "autoMemberFeeIncome",
+        storageKey,
         checkbox.checked
       );
 
