@@ -642,7 +642,54 @@ function getYearMonth(
 
 }
 
+async function loadMonth() {
 
+  if (!currentUser) return;
+
+  const yearMonth =
+    getYearMonth();
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("transactions")
+      .select("*")
+      .eq(
+        "year_month",
+        yearMonth
+      )
+      .order(
+        "date",
+        {
+          ascending: true
+        }
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    transactions = [];
+
+    renderTransactions();
+
+    return;
+  }
+
+  transactions =
+    data || [];
+
+  renderTransactions();
+
+}
 // ==============================
 // 月データ
 // ==============================
