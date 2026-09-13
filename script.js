@@ -1859,6 +1859,7 @@ async function prepareMemberFees() {
   const yearMonth =
     getYearMonth();
 
+  // 現在表示している月の部費データを取得
   const {
     data,
     error
@@ -1872,70 +1873,137 @@ async function prepareMemberFees() {
       );
 
   if (error) {
-
     console.error(error);
     return;
-
   }
 
   memberFees =
     data || [];
 
-  if (isEditor()) {
-
-    for (
-      const member of members
-    ) {
-
-      const exists =
-        memberFees.some(
-          fee =>
-            fee.member_id ===
-            member.id
-        );
-
-      if (exists) continue;
-
-      const {
-        data: newFee,
-        error: insertError
-      } =
-        await supabaseClient
-          .from("member_fees")
-          .insert({
-            member_id:
-              member.id,
-            year_month:
-              yearMonth,
-            amount:
-              Number(
-                member.monthly_fee
-              ) || 0,
-            paid:
-              false
-          })
-          .select()
-          .single();
-
-      if (insertError) {
-
-        console.error(
-          insertError
-        );
-
-        continue;
-      }
-
-      memberFees.push(
-        newFee
-      );
-
-    }
-
+  // 閲覧モードではデータを作成しない
+  if (!isEditor()) {
+    return;
   }
 
-}
+  // 表示中の部員について、
+  // 今月の部費データが無ければ作成する
+  for (
+    const member of members
+  ) {
 
+    const exists =
+      memberFees.some(
+        fee =>
+          fee.member_id ===
+          member.id
+      );
+
+    // すでに今月のデータがあれば何もしない
+    if (exists) {
+      continue;
+    }
+
+    /*
+      今月のデータが無い場合、
+
+      ① それ以前の月に登録された
+         最新の部費額を探す
+
+      ② 過去の部費データが無ければ
+         members.monthly_fee を使う
+    */
+
+    const {
+      data: previousFees,
+      error: previousError
+    } =
+      await supabaseClient
+        .from("member_fees")
+        .select(
+          "amount, year_month"
+        )
+        .eq(
+          "member_id",
+          member.id
+        )
+        .lt(
+          "year_month",
+          yearMonth
+        )
+        .order(
+          "year_month",
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+    if (previousError) {
+      console.error(
+        previousError
+      );
+      continue;
+    }
+
+    let amount;
+
+    if (
+      previousFees &&
+      previousFees.length > 0
+    ) {
+
+      // 直近の月の部費を引き継ぐ
+      amount =
+        Number(
+          previousFees[0].amount
+        ) || 0;
+
+    } else {
+
+      // 過去データが無い場合は
+      // 部員登録時の金額を使用
+      amount =
+        Number(
+          member.monthly_fee
+        ) || 0;
+    }
+
+    const {
+      data: newFee,
+      error: insertError
+    } =
+      await supabaseClient
+        .from("member_fees")
+        .insert({
+          member_id:
+            member.id,
+
+          year_month:
+            yearMonth,
+
+          amount:
+            amount,
+
+          paid:
+            false
+        })
+        .select()
+        .single();
+
+    if (insertError) {
+
+      console.error(
+        insertError
+      );
+
+      continue;
+    }
+
+    memberFees.push(
+      newFee
+    );
+  }
+}
 
 function renderMembers() {
 
