@@ -2257,77 +2257,76 @@ function renderMemberSummary() {
 
 async function addMember() {
 
-  if (!isEditor()) {
+  if (!isEditor()) return;
 
-    alert(
-      "編集権限がありません。"
-    );
+  const memberName =
+    prompt("部員名を入力してください");
 
+  if (
+    !memberName ||
+    memberName.trim() === ""
+  ) {
     return;
   }
 
-  const name =
+  const feeInput =
     prompt(
-      "部員名を入力してください。"
-    );
-
-  if (!name) return;
-
-  const memberName =
-    name.trim();
-
-  if (!memberName) return;
-
-  const feeText =
-    prompt(
-      "月額部費を入力してください。",
+      "月額の部費を入力してください",
       "2000"
     );
 
-  if (feeText === null) return;
-
-  const monthlyFee =
-    Number(feeText);
-
-  if (
-    !Number.isFinite(
-      monthlyFee
-    ) ||
-    monthlyFee < 0
-  ) {
-
-    alert(
-      "正しい金額を入力してください。"
-    );
-
+  if (feeInput === null) {
     return;
   }
 
+  const monthlyFee =
+    Number(feeInput);
+
+  if (
+    !Number.isFinite(monthlyFee) ||
+    monthlyFee < 0
+  ) {
+    alert(
+      "部費は0以上の数字で入力してください。"
+    );
+    return;
+  }
+
+  const joinedYearMonth =
+    getYearMonth();
+
   const {
-  data,
-  error
-} =
-  await supabaseClient
-    .from("members")
-    .insert({
-      name:
-        memberName,
-      monthly_fee:
-        monthlyFee,
-      active:
-        true,
-      joined_year_month:
-        getYearMonth()
-    })
-    .select()
-    .single();
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("members")
+      .insert({
+        name:
+          memberName.trim(),
+
+        monthly_fee:
+          monthlyFee,
+
+        active:
+          true,
+
+        joined_year_month:
+          joinedYearMonth,
+
+        left_year_month:
+          null
+      })
+      .select()
+      .single();
 
   if (error) {
 
     console.error(error);
 
     alert(
-      "部員の追加に失敗しました。"
+      "部員の追加に失敗しました。\n\n" +
+      error.message
     );
 
     return;
@@ -2335,43 +2334,11 @@ async function addMember() {
 
   members.push(data);
 
-  const {
-    data: feeData,
-    error: feeError
-  } =
-    await supabaseClient
-      .from("member_fees")
-      .insert({
-        member_id:
-          data.id,
-        year_month:
-          getYearMonth(),
-        amount:
-          monthlyFee,
-        paid:
-          false
-      })
-      .select()
-      .single();
-
-  if (feeError) {
-
-    console.error(
-      feeError
-    );
-
-  } else {
-
-    memberFees.push(
-      feeData
-    );
-
-  }
+  await prepareMemberFees();
 
   renderMembers();
 
   await calculateTotals();
-
 }
 
 
