@@ -471,23 +471,29 @@ function setupAutoMemberFeeIncome() {
 
   if (!checkbox) return;
 
-  const yearMonth =
-    getYearMonth();
+  const loadSetting =
+    () => {
 
-  const storageKey =
-    `autoMemberFeeIncome_${yearMonth}`;
+      const storageKey =
+        `autoMemberFeeIncome_${getYearMonth()}`;
 
-  const saved =
-    localStorage.getItem(
-      storageKey
-    );
+      const saved =
+        localStorage.getItem(
+          storageKey
+        );
 
-  checkbox.checked =
-    saved === "true";
+      checkbox.checked =
+        saved === "true";
+    };
+
+  loadSetting();
 
   checkbox.addEventListener(
     "change",
     async () => {
+
+      const storageKey =
+        `autoMemberFeeIncome_${getYearMonth()}`;
 
       localStorage.setItem(
         storageKey,
@@ -502,16 +508,18 @@ function setupAutoMemberFeeIncome() {
 }
 
 
-function isAutoMemberFeeIncome() {
+function isAutoMemberFeeIncome(
+  yearMonth = getYearMonth()
+) {
 
-  const checkbox =
-    document.getElementById(
-      "autoMemberFeeIncome"
-    );
+  const storageKey =
+    `autoMemberFeeIncome_${yearMonth}`;
 
-  return checkbox
-    ? checkbox.checked
-    : false;
+  return (
+    localStorage.getItem(
+      storageKey
+    ) === "true"
+  );
 
 }
 
@@ -587,8 +595,7 @@ async function changeMonth(direction) {
 
   await loadMembers();
 
-  // 月が変わったので、
-  // その月の自動収入設定を読み込む
+  // その月の自動収入設定を表示
   const checkbox =
     document.getElementById(
       "autoMemberFeeIncome"
@@ -596,19 +603,14 @@ async function changeMonth(direction) {
 
   if (checkbox) {
 
-    const storageKey =
-      `autoMemberFeeIncome_${getYearMonth()}`;
-
-    const saved =
-      localStorage.getItem(
-        storageKey
+    checkbox.checked =
+      isAutoMemberFeeIncome(
+        getYearMonth()
       );
 
-    checkbox.checked =
-      saved === "true";
   }
 
-  // 月変更直後にも残高を再計算
+  // 月変更直後に残高を再計算
   await calculateTotals();
 
 }
@@ -817,10 +819,15 @@ async function calculateMonthBalance(
     return 0;
   }
 
-  let previousYear = year;
-  let previousMonth = month - 1;
+  let previousYear =
+    year;
 
-  if (previousMonth === 0) {
+  let previousMonth =
+    month - 1;
+
+  if (
+    previousMonth === 0
+  ) {
 
     previousMonth = 12;
     previousYear--;
@@ -850,6 +857,7 @@ async function calculateMonthBalance(
   if (error) {
 
     console.error(error);
+
     return 0;
 
   }
@@ -871,8 +879,11 @@ async function calculateMonthBalance(
 
   let memberFeeIncome = 0;
 
+  // ★ この月自身の設定を確認する
   if (
-    isAutoMemberFeeIncome()
+    isAutoMemberFeeIncome(
+      yearMonth
+    )
   ) {
 
     memberFeeIncome =
