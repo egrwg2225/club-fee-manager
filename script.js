@@ -765,59 +765,69 @@ async function getPaidMemberFeesTotal(
   yearMonth
 ) {
 
-  // 実際の現在年月を取得
-  const now = new Date();
-
-  const actualYear =
-    now.getFullYear();
-
-  const actualMonth =
-    now.getMonth() + 1;
-
-  const actualYearMonth =
-    `${actualYear}-${String(actualMonth).padStart(2, "0")}`;
-
-  // 実際の今月の場合
-  // 現在有効な部員だけを対象にする
-  if (
-    yearMonth ===
-    actualYearMonth
-  ) {
-
-    const activeMemberIds =
-      new Set(
-        members.map(
-          member =>
-            member.id
-        )
+  // 対象月に在籍していた部員だけを取得
+  const {
+    data: allMembers,
+    error: memberError
+  } =
+    await supabaseClient
+      .from("members")
+      .select(
+        "id, joined_year_month, left_year_month"
       );
 
-    return memberFees
-      .filter(
-        fee =>
-          fee.paid === true &&
-          activeMemberIds.has(
-            fee.member_id
-          )
-      )
-      .reduce(
-        (total, fee) =>
-          total +
-          (Number(fee.amount) || 0),
-        0
-      );
+  if (memberError) {
+
+    console.error(memberError);
+
+    return 0;
 
   }
 
-  // 過去月は保存されている
-  // 部費履歴をそのまま使用
+  const activeMemberIds =
+    new Set(
+      (allMembers || [])
+        .filter(
+          member => {
+
+            // 入部月より前なら対象外
+            if (
+              member.joined_year_month &&
+              yearMonth <
+              member.joined_year_month
+            ) {
+              return false;
+            }
+
+            // 退部月以降なら対象外
+            if (
+              member.left_year_month &&
+              yearMonth >=
+              member.left_year_month
+            ) {
+              return false;
+            }
+
+            return true;
+
+          }
+        )
+        .map(
+          member =>
+            member.id
+        )
+    );
+
+  // 対象月の支払済部費を取得
   const {
     data,
     error
   } =
     await supabaseClient
       .from("member_fees")
-      .select("amount")
+      .select(
+        "member_id, amount"
+      )
       .eq(
         "year_month",
         yearMonth
@@ -835,12 +845,20 @@ async function getPaidMemberFeesTotal(
 
   }
 
-  return (data || []).reduce(
-    (total, row) =>
-      total +
-      (Number(row.amount) || 0),
-    0
-  );
+  // 対象月に在籍していた部員の分だけ合計
+  return (data || [])
+    .filter(
+      fee =>
+        activeMemberIds.has(
+          fee.member_id
+        )
+    )
+    .reduce(
+      (total, fee) =>
+        total +
+        (Number(fee.amount) || 0),
+      0
+    );
 
 }
 // ==============================
