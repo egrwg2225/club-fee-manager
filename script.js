@@ -587,6 +587,30 @@ async function changeMonth(direction) {
 
   await loadMembers();
 
+  // 月が変わったので、
+  // その月の自動収入設定を読み込む
+  const checkbox =
+    document.getElementById(
+      "autoMemberFeeIncome"
+    );
+
+  if (checkbox) {
+
+    const storageKey =
+      `autoMemberFeeIncome_${getYearMonth()}`;
+
+    const saved =
+      localStorage.getItem(
+        storageKey
+      );
+
+    checkbox.checked =
+      saved === "true";
+  }
+
+  // 月変更直後にも残高を再計算
+  await calculateTotals();
+
 }
 
 
