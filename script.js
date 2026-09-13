@@ -441,8 +441,9 @@ async function loadUserRole() {
 
   // ここは必ず実行する
   await loadCategories();
-  await loadMonth();
-  await loadMembers();
+await loadMonth();
+await loadMembers();
+await calculateTotals();
 
 }
 
