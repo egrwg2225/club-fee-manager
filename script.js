@@ -1877,69 +1877,7 @@ function setupMemberManagement() {
 
 
 
-  async function loadMembers() {
 
-  if (!currentUser) return;
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("members")
-      .select("*")
-      .order(
-        "created_at",
-        {
-          ascending: true
-        }
-      );
-
-  if (error) {
-
-    console.error(error);
-
-    return;
-  }
-
-  const displayYearMonth =
-    getYearMonth();
-
-  members =
-    (data || []).filter(
-      member => {
-
-        // 入部月が設定されていて、
-        // 表示月が入部月より前なら表示しない
-        if (
-          member.joined_year_month &&
-          displayYearMonth <
-          member.joined_year_month
-        ) {
-          return false;
-        }
-
-        // 退部月が設定されていて、
-        // 表示月が退部月以降なら表示しない
-        if (
-          member.left_year_month &&
-          displayYearMonth >=
-          member.left_year_month
-        ) {
-          return false;
-        }
-
-        // 上記に該当しなければ表示
-        return (
-          member.active === true
-        );
-      }
-    );
-
-  await prepareMemberFees();
-
-  renderMembers();
-}
 
 
 async function prepareMemberFees() {
