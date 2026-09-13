@@ -692,18 +692,14 @@ async function loadMembers() {
         // 退部年月が設定されている場合
         // 退部月以降は表示しない
         if (
-          member.left_year_month &&
-          displayYearMonth >=
-          member.left_year_month
-        ) {
-          return false;
-        }
+  member.left_year_month &&
+  displayYearMonth >=
+  member.left_year_month
+) {
+  return false;
+}
 
-        // 入部・退部の履歴情報がない
-        // 旧データは active を使用
-        return (
-          member.active === true
-        );
+return true;
 
       }
     );
