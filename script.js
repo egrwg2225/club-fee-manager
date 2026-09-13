@@ -1814,8 +1814,8 @@ function setupMemberManagement() {
   if (error) {
 
     console.error(error);
-    return;
 
+    return;
   }
 
   const displayYearMonth =
@@ -1825,32 +1825,36 @@ function setupMemberManagement() {
     (data || []).filter(
       member => {
 
-        // 退部年月が設定されている部員
+        // 入部月が設定されていて、
+        // 表示月が入部月より前なら表示しない
         if (
-          member.left_year_month
+          member.joined_year_month &&
+          displayYearMonth <
+          member.joined_year_month
         ) {
-
-          // 表示月が退部月より前なら表示
-          return (
-            displayYearMonth <
-            member.left_year_month
-          );
-
+          return false;
         }
 
-        // 退部年月がない場合は、
-        // 現在も有効な部員だけ表示
+        // 退部月が設定されていて、
+        // 表示月が退部月以降なら表示しない
+        if (
+          member.left_year_month &&
+          displayYearMonth >=
+          member.left_year_month
+        ) {
+          return false;
+        }
+
+        // 上記に該当しなければ表示
         return (
           member.active === true
         );
-
       }
     );
 
   await prepareMemberFees();
 
   renderMembers();
-
 }
 
 
