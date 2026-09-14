@@ -613,9 +613,20 @@ async function changeMonth(direction) {
   // 月変更直後に残高を再計算
   await calculateTotals();
 
+  // 月別集計を表示中なら再描画
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (
+    summarySection &&
+    summarySection.style.display !== "none"
+  ) {
+    await renderSummary();
+  }
+
 }
-
-
 function updateMonthTitle() {
 
   const title =
