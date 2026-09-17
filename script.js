@@ -3505,7 +3505,7 @@ async function showSummary() {
 // A4 PDF
 // ==============================
 
-async function exportPDF() {
+function exportPDF() {
 
   const incomeSection =
     document.getElementById(
@@ -3523,38 +3523,25 @@ async function exportPDF() {
     );
 
   if (incomeSection) {
-
     incomeSection.style.display =
       "none";
-
   }
 
   if (membersSection) {
-
     membersSection.style.display =
       "none";
-
   }
 
   if (summarySection) {
-
     summarySection.style.display =
       "block";
-
   }
 
   createPDFTransactionTable();
 
-  await renderSummary();
-
-  setTimeout(
-    () => {
-
-      window.print();
-
-    },
-    300
-  );
+  // iPhoneで印刷画面を確実に起動するため、
+  // ユーザーのタップ直後にwindow.print()を実行
+  window.print();
 
 }
 
