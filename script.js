@@ -3539,12 +3539,10 @@ function exportPDF() {
 
   createPDFTransactionTable();
 
-  // iPhoneで印刷画面を確実に起動するため、
-  // ユーザーのタップ直後にwindow.print()を実行
   window.print();
 
 }
-
+  
 
 // ==============================
 // PDF収支明細
