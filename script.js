@@ -3505,41 +3505,191 @@ async function showSummary() {
 // A4 PDF
 // ==============================
 
-function exportPDF() {
+async function exportPDF() {
 
-  const incomeSection =
-    document.getElementById(
-      "incomeExpenseSection"
+  // まず印刷用の新しいページを開く
+  // ※ユーザーのタップ直後に実行することが重要
+  const printWindow =
+    window.open(
+      "",
+      "_blank"
     );
 
-  const membersSection =
-    document.getElementById(
-      "membersSection"
+  if (!printWindow) {
+
+    alert(
+      "印刷ページを開けませんでした。\n\n" +
+      "iPhoneのポップアップブロックが有効になっている可能性があります。"
     );
+
+    return;
+
+  }
+
+  // 現在の月別集計を最新状態にする
+  await renderSummary();
+
+  // 収支明細を作成
+  createPDFTransactionTable();
 
   const summarySection =
     document.getElementById(
       "summarySection"
     );
 
-  if (incomeSection) {
-    incomeSection.style.display =
-      "none";
+  if (!summarySection) {
+
+    printWindow.close();
+
+    return;
+
   }
 
-  if (membersSection) {
-    membersSection.style.display =
-      "none";
+  // 現在の月別集計部分をコピー
+  const summaryHTML =
+    summarySection.innerHTML;
+
+  // 現在のページのCSSを取得
+  const styleSheets =
+    Array.from(
+      document.styleSheets
+    );
+
+  let cssText = "";
+
+  styleSheets.forEach(
+    sheet => {
+
+      try {
+
+        Array.from(
+          sheet.cssRules
+        ).forEach(
+          rule => {
+
+            cssText +=
+              rule.cssText + "\n";
+
+          }
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+      }
+
+    }
+  );
+
+  // 印刷ページを作成
+  printWindow.document.open();
+
+  printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+  部費管理 月別収支レポート
+</title>
+
+<style>
+
+${cssText}
+
+/* ==============================
+   印刷専用
+   ============================== */
+
+@page {
+  size: A4 portrait;
+  margin: 8mm;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: white;
+}
+
+body {
+  width: 100%;
+  color: black;
+}
+
+#summarySection {
+  display: block !important;
+}
+
+.menu,
+.month-area button,
+#incomeExpenseSection,
+#membersSection,
+button,
+input,
+select {
+  display: none !important;
+}
+
+.balance-card {
+  display: none !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<section id="summarySection">
+
+${summaryHTML}
+
+</section>
+
+</body>
+
+</html>
+  `);
+
+  printWindow.document.close();
+
+  // 元ページに追加したPDF用明細を削除
+  const temporaryTable =
+    document.getElementById(
+      "pdfTransactionSection"
+    );
+
+  if (temporaryTable) {
+
+    temporaryTable.remove();
+
   }
 
-  if (summarySection) {
-    summarySection.style.display =
-      "block";
-  }
+  // 印刷ページを表示
+  printWindow.focus();
 
-  createPDFTransactionTable();
+  // 印刷ページの読み込みが完了してから印刷
+  printWindow.onload =
+    () => {
 
-  window.print();
+      printWindow.focus();
+
+      printWindow.print();
+
+    };
 
 }
   
