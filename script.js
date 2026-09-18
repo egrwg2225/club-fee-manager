@@ -3500,15 +3500,13 @@ async function showSummary() {
 
 }
 
-
 // ==============================
 // A4 PDF
 // ==============================
 
 async function exportPDF() {
 
-  // まず印刷用の新しいページを開く
-  // ※ユーザーのタップ直後に実行することが重要
+  // 印刷用ページを新しく開く
   const printWindow =
     window.open(
       "",
@@ -3519,14 +3517,14 @@ async function exportPDF() {
 
     alert(
       "印刷ページを開けませんでした。\n\n" +
-      "iPhoneのポップアップブロックが有効になっている可能性があります。"
+      "ブラウザのポップアップ設定を確認してください。"
     );
 
     return;
 
   }
 
-  // 現在の月別集計を最新状態にする
+  // 月別集計を最新状態にする
   await renderSummary();
 
   // 収支明細を作成
@@ -3545,19 +3543,15 @@ async function exportPDF() {
 
   }
 
-  // 現在の月別集計部分をコピー
   const summaryHTML =
     summarySection.innerHTML;
 
-  // 現在のページのCSSを取得
-  const styleSheets =
-    Array.from(
-      document.styleSheets
-    );
-
+  // 現在のCSSを取得
   let cssText = "";
 
-  styleSheets.forEach(
+  Array.from(
+    document.styleSheets
+  ).forEach(
     sheet => {
 
       try {
@@ -3584,11 +3578,12 @@ async function exportPDF() {
     }
   );
 
-  // 印刷ページを作成
+  // 印刷用ページ
   printWindow.document.open();
 
   printWindow.document.write(`
 <!DOCTYPE html>
+
 <html lang="ja">
 
 <head>
@@ -3600,16 +3595,14 @@ async function exportPDF() {
   content="width=device-width, initial-scale=1.0"
 >
 
-<title>
-  部費管理 月別収支レポート
-</title>
+<title>部費管理 月別収支レポート</title>
 
 <style>
 
 ${cssText}
 
 /* ==============================
-   印刷専用
+   印刷ページ
    ============================== */
 
 @page {
@@ -3629,12 +3622,12 @@ body {
   color: black;
 }
 
+/* 月別集計 */
 #summarySection {
   display: block !important;
 }
 
-.menu,
-.month-area button,
+/* アプリ用の不要なものを非表示 */
 #incomeExpenseSection,
 #membersSection,
 button,
@@ -3643,8 +3636,35 @@ select {
   display: none !important;
 }
 
-.balance-card {
-  display: none !important;
+/* 印刷ページの操作ボタン */
+#printControls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+#printControls button {
+  display: block !important;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #999;
+  background: white;
+  color: black;
+}
+
+#printControls .print-button {
+  background: #333;
+  color: white;
+}
+
+@media print {
+
+  #printControls {
+    display: none !important;
+  }
+
 }
 
 </style>
@@ -3652,6 +3672,24 @@ select {
 </head>
 
 <body>
+
+<!-- 印刷操作 -->
+<div id="printControls">
+
+  <button
+    class="print-button"
+    onclick="window.print()"
+  >
+    🖨 印刷する
+  </button>
+
+  <button
+    onclick="window.close()"
+  >
+    ← アプリに戻る
+  </button>
+
+</div>
 
 <section id="summarySection">
 
@@ -3666,7 +3704,7 @@ ${summaryHTML}
 
   printWindow.document.close();
 
-  // 元ページに追加したPDF用明細を削除
+  // 元ページに追加した一時テーブルを削除
   const temporaryTable =
     document.getElementById(
       "pdfTransactionSection"
@@ -3677,19 +3715,6 @@ ${summaryHTML}
     temporaryTable.remove();
 
   }
-
-  // 印刷ページを表示
-  printWindow.focus();
-
-  // 印刷ページの読み込みが完了してから印刷
-  printWindow.onload =
-    () => {
-
-      printWindow.focus();
-
-      printWindow.print();
-
-    };
 
 }
   
