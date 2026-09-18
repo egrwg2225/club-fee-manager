@@ -3536,38 +3536,9 @@ function exportPDF() {
 
   createPDFTransactionTable();
 
-  // ホーム画面版でもSafariの印刷機能を利用する
-  const isStandalone =
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches ||
-    window.navigator.standalone === true;
-
-  if (isStandalone) {
-
-    const printWindow =
-      window.open(
-        window.location.href,
-        "_blank"
-      );
-
-    if (printWindow) {
-      printWindow.addEventListener(
-        "load",
-        function () {
-          printWindow.print();
-        }
-      );
-    }
-
-  } else {
-
-    window.print();
-
-  }
+  window.print();
 
 }
-
 // ==============================
 // PDF収支明細
 // ==============================
