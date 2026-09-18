@@ -3505,7 +3505,7 @@ async function showSummary() {
 // A4 PDF
 // ==============================
 
-async function exportPDF() {
+function exportPDF() {
 
   const incomeSection =
     document.getElementById(
@@ -3545,16 +3545,8 @@ async function exportPDF() {
 
   createPDFTransactionTable();
 
-  await renderSummary();
-
-  setTimeout(
-    () => {
-
-      window.print();
-
-    },
-    300
-  );
+  createPDFTransactionTable();
+window.print();
 
 }
 
