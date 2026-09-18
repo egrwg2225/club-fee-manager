@@ -3500,224 +3500,64 @@ async function showSummary() {
 
 }
 
+
 // ==============================
 // A4 PDF
 // ==============================
 
 async function exportPDF() {
 
-  // 印刷用ページを新しく開く
-  const printWindow =
-    window.open(
-      "",
-      "_blank"
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
     );
 
-  if (!printWindow) {
-
-    alert(
-      "印刷ページを開けませんでした。\n\n" +
-      "ブラウザのポップアップ設定を確認してください。"
+  const membersSection =
+    document.getElementById(
+      "membersSection"
     );
-
-    return;
-
-  }
-
-  // 月別集計を最新状態にする
-  await renderSummary();
-
-  // 収支明細を作成
-  createPDFTransactionTable();
 
   const summarySection =
     document.getElementById(
       "summarySection"
     );
 
-  if (!summarySection) {
+  if (incomeSection) {
 
-    printWindow.close();
-
-    return;
+    incomeSection.style.display =
+      "none";
 
   }
 
-  const summaryHTML =
-    summarySection.innerHTML;
+  if (membersSection) {
 
-  // 現在のCSSを取得
-  let cssText = "";
+    membersSection.style.display =
+      "none";
 
-  Array.from(
-    document.styleSheets
-  ).forEach(
-    sheet => {
+  }
 
-      try {
+  if (summarySection) {
 
-        Array.from(
-          sheet.cssRules
-        ).forEach(
-          rule => {
+    summarySection.style.display =
+      "block";
 
-            cssText +=
-              rule.cssText + "\n";
+  }
 
-          }
-        );
+  createPDFTransactionTable();
 
-      } catch (error) {
+  await renderSummary();
 
-        console.error(
-          error
-        );
+  setTimeout(
+    () => {
 
-      }
+      window.print();
 
-    }
+    },
+    300
   );
 
-  // 印刷用ページ
-  printWindow.document.open();
-
-  printWindow.document.write(`
-<!DOCTYPE html>
-
-<html lang="ja">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>部費管理 月別収支レポート</title>
-
-<style>
-
-${cssText}
-
-/* ==============================
-   印刷ページ
-   ============================== */
-
-@page {
-  size: A4 portrait;
-  margin: 8mm;
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: white;
-}
-
-body {
-  width: 100%;
-  color: black;
-}
-
-/* 月別集計 */
-#summarySection {
-  display: block !important;
-}
-
-/* アプリ用の不要なものを非表示 */
-#incomeExpenseSection,
-#membersSection,
-button,
-input,
-select {
-  display: none !important;
-}
-
-/* 印刷ページの操作ボタン */
-#printControls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding: 10px 0;
-}
-
-#printControls button {
-  display: block !important;
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #999;
-  background: white;
-  color: black;
-}
-
-#printControls .print-button {
-  background: #333;
-  color: white;
-}
-
-@media print {
-
-  #printControls {
-    display: none !important;
-  }
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<!-- 印刷操作 -->
-<div id="printControls">
-
-  <button
-    class="print-button"
-    onclick="window.print()"
-  >
-    🖨 印刷する
-  </button>
-
-  <button
-    onclick="window.close()"
-  >
-    ← アプリに戻る
-  </button>
-
-</div>
-
-<section id="summarySection">
-
-${summaryHTML}
-
-</section>
-
-</body>
-
-</html>
-  `);
-
-  printWindow.document.close();
-
-  // 元ページに追加した一時テーブルを削除
-  const temporaryTable =
-    document.getElementById(
-      "pdfTransactionSection"
-    );
-
-  if (temporaryTable) {
-
-    temporaryTable.remove();
-
-  }
-
-}
-  
 
 // ==============================
 // PDF収支明細
