@@ -3523,33 +3523,50 @@ function exportPDF() {
     );
 
   if (incomeSection) {
-
-    incomeSection.style.display =
-      "none";
-
+    incomeSection.style.display = "none";
   }
 
   if (membersSection) {
-
-    membersSection.style.display =
-      "none";
-
+    membersSection.style.display = "none";
   }
 
   if (summarySection) {
-
-    summarySection.style.display =
-      "block";
-
+    summarySection.style.display = "block";
   }
 
   createPDFTransactionTable();
 
-  createPDFTransactionTable();
-window.print();
+  // ホーム画面版でもSafariの印刷機能を利用する
+  const isStandalone =
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+
+    const printWindow =
+      window.open(
+        window.location.href,
+        "_blank"
+      );
+
+    if (printWindow) {
+      printWindow.addEventListener(
+        "load",
+        function () {
+          printWindow.print();
+        }
+      );
+    }
+
+  } else {
+
+    window.print();
+
+  }
 
 }
-
 
 // ==============================
 // PDF収支明細
