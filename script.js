@@ -3507,34 +3507,15 @@ async function showSummary() {
 
 function exportPDF() {
 
-  const incomeSection =
-    document.getElementById("incomeExpenseSection");
-
-  const membersSection =
-    document.getElementById("membersSection");
-
-  const summarySection =
-    document.getElementById("summarySection");
-
-  if (incomeSection) {
-    incomeSection.style.display = "none";
+  if (
+    typeof html2canvas === "undefined" ||
+    typeof window.jspdf === "undefined"
+  ) {
+    alert("PDFライブラリの読み込みに失敗しています");
+    return;
   }
 
-  if (membersSection) {
-    membersSection.style.display = "none";
-  }
-
-  if (summarySection) {
-    summarySection.style.display = "block";
-  }
-
-  createPDFTransactionTable();
-
-  alert("PDF出力テスト：ここまで実行されています");
-
-setTimeout(() => {
-  window.print();
-}, 100);
+  alert("PDFライブラリの読み込み成功");
 
 }
 // ==============================
