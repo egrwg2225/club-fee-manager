@@ -3507,15 +3507,139 @@ async function showSummary() {
 
 function exportPDF() {
 
-  if (
-    typeof html2canvas === "undefined" ||
-    typeof window.jspdf === "undefined"
-  ) {
-    alert("PDFライブラリの読み込みに失敗しています");
+  const incomeSection =
+    document.getElementById("incomeExpenseSection");
+
+  const membersSection =
+    document.getElementById("membersSection");
+
+  const summarySection =
+    document.getElementById("summarySection");
+
+  // PDF用の表示状態にする
+  if (incomeSection) {
+    incomeSection.style.display = "none";
+  }
+
+  if (membersSection) {
+    membersSection.style.display = "none";
+  }
+
+  if (summarySection) {
+    summarySection.style.display = "block";
+  }
+
+  // 収支明細を作成
+  createPDFTransactionTable();
+
+  // PDF化する部分
+  const pdfTarget = document.getElementById("summarySection");
+
+  if (!pdfTarget) {
+    alert("PDF対象が見つかりません");
     return;
   }
 
-  alert("PDFライブラリの読み込み成功");
+  // 少し待って画面の描画を完了させる
+  setTimeout(async () => {
+
+    try {
+
+      const canvas = await html2canvas(pdfTarget, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+
+      const { jsPDF } = window.jspdf;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      const margin = 7;
+
+      const usableWidth = pageWidth - margin * 2;
+
+      const imageWidth = usableWidth;
+
+      const imageHeight =
+        canvas.height * imageWidth / canvas.width;
+
+      // A4 1ページに収まる場合
+      if (imageHeight <= pageHeight - margin * 2) {
+
+        pdf.addImage(
+          canvas.toDataURL("image/jpeg", 0.95),
+          "JPEG",
+          margin,
+          margin,
+          imageWidth,
+          imageHeight
+        );
+
+      } else {
+
+        // 長い場合は複数ページに分割
+        let remainingHeight = imageHeight;
+        let position = margin;
+
+        pdf.addImage(
+          canvas.toDataURL("image/jpeg", 0.95),
+          "JPEG",
+          margin,
+          position,
+          imageWidth,
+          imageHeight
+        );
+
+        remainingHeight -= pageHeight - margin * 2;
+
+        while (remainingHeight > 0) {
+
+          pdf.addPage();
+
+          position =
+            margin -
+            (imageHeight - remainingHeight);
+
+          pdf.addImage(
+            canvas.toDataURL("image/jpeg", 0.95),
+            "JPEG",
+            margin,
+            position,
+            imageWidth,
+            imageHeight
+          );
+
+          remainingHeight -= pageHeight - margin * 2;
+        }
+      }
+
+      // 現在の年月をファイル名にする
+      const yearMonth =
+        document.getElementById("currentMonth")?.textContent ||
+        "収支";
+
+      pdf.save(`部費管理_${yearMonth}.pdf`);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "PDFの作成中にエラーが発生しました。\n" +
+        error.message
+      );
+
+    }
+
+  }, 300);
 
 }
 // ==============================
