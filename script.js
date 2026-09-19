@@ -3549,7 +3549,7 @@ createPDFTransactionTable();
     try {
 
       const canvas = await html2canvas(pdfTarget, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff"
       });
