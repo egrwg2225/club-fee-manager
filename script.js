@@ -3530,7 +3530,8 @@ function exportPDF() {
 
   createPDFTransactionTable();
 
-  window.print();
+  alert("PDF出力テスト：ここまで実行されています");
+window.print();
 
 }
 // ==============================
