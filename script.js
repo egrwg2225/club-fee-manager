@@ -3574,55 +3574,82 @@ createPDFTransactionTable();
       const imageHeight =
         canvas.height * imageWidth / canvas.width;
 
-      // A4 1ページに収まる場合
-      if (imageHeight <= pageHeight - margin * 2) {
+     // A4の実際に使える高さ
+const usableHeight = pageHeight - margin * 2;
 
-        pdf.addImage(
-          canvas.toDataURL("image/jpeg", 0.95),
-          "JPEG",
-          margin,
-          margin,
-          imageWidth,
-          imageHeight
-        );
+// キャンバス上で、A4 1ページ分に相当する高さ
+const pageHeightPx =
+  canvas.width * usableHeight / usableWidth;
 
-      } else {
+// 何ページ必要か計算
+const totalPages =
+  Math.ceil(canvas.height / pageHeightPx);
 
-        // 長い場合は複数ページに分割
-        let remainingHeight = imageHeight;
-        let position = margin;
+for (let page = 0; page < totalPages; page++) {
 
-        pdf.addImage(
-          canvas.toDataURL("image/jpeg", 0.95),
-          "JPEG",
-          margin,
-          position,
-          imageWidth,
-          imageHeight
-        );
+  if (page > 0) {
+    pdf.addPage();
+  }
 
-        remainingHeight -= pageHeight - margin * 2;
+  // このページに入れる部分だけを切り出す
+  const startY =
+    Math.floor(page * pageHeightPx);
 
-        while (remainingHeight > 0) {
+  const remainingPx =
+    canvas.height - startY;
 
-          pdf.addPage();
+  const sliceHeight =
+    Math.min(pageHeightPx, remainingPx);
 
-          position =
-            margin -
-            (imageHeight - remainingHeight);
+  const pageCanvas =
+    document.createElement("canvas");
 
-          pdf.addImage(
-            canvas.toDataURL("image/jpeg", 0.95),
-            "JPEG",
-            margin,
-            position,
-            imageWidth,
-            imageHeight
-          );
+  pageCanvas.width = canvas.width;
+  pageCanvas.height = sliceHeight;
 
-          remainingHeight -= pageHeight - margin * 2;
-        }
-      }
+  const pageContext =
+    pageCanvas.getContext("2d");
+
+  pageContext.fillStyle = "#ffffff";
+  pageContext.fillRect(
+    0,
+    0,
+    pageCanvas.width,
+    pageCanvas.height
+  );
+
+  pageContext.drawImage(
+    canvas,
+    0,
+    startY,
+    canvas.width,
+    sliceHeight,
+    0,
+    0,
+    canvas.width,
+    sliceHeight
+  );
+
+  const pageImage =
+    pageCanvas.toDataURL(
+      "image/jpeg",
+      0.95
+    );
+
+  const pageImageHeight =
+    sliceHeight *
+    imageWidth /
+    canvas.width;
+
+  pdf.addImage(
+    pageImage,
+    "JPEG",
+    margin,
+    margin,
+    imageWidth,
+    pageImageHeight
+  );
+}
 
       // 現在の年月をファイル名にする
       const yearMonth =
