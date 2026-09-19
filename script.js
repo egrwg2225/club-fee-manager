@@ -3508,19 +3508,13 @@ async function showSummary() {
 function exportPDF() {
 
   const incomeSection =
-    document.getElementById(
-      "incomeExpenseSection"
-    );
+    document.getElementById("incomeExpenseSection");
 
   const membersSection =
-    document.getElementById(
-      "membersSection"
-    );
+    document.getElementById("membersSection");
 
   const summarySection =
-    document.getElementById(
-      "summarySection"
-    );
+    document.getElementById("summarySection");
 
   if (incomeSection) {
     incomeSection.style.display = "none";
@@ -3536,51 +3530,7 @@ function exportPDF() {
 
   createPDFTransactionTable();
 
-  const isStandalone =
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches ||
-    window.navigator.standalone === true;
-
-  if (isStandalone) {
-
-    const safariURL =
-      window.location.href;
-
-    document.body.innerHTML =
-      `
-      <div style="
-        padding:40px 20px;
-        text-align:center;
-        font-family:sans-serif;
-      ">
-
-        <h2>PDF出力</h2>
-
-        <p>
-          ホーム画面版では印刷機能を利用できないため、
-          SafariでPDFを開きます。
-        </p>
-
-        <button
-          onclick="window.location.href='${safariURL}'"
-          style="
-            padding:15px 25px;
-            font-size:18px;
-            margin:10px;
-          "
-        >
-          SafariでPDFを開く
-        </button>
-
-      </div>
-      `;
-
-  } else {
-
-    window.print();
-
-  }
+  window.print();
 
 }
 // ==============================
