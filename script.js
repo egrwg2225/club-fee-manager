@@ -3505,7 +3505,7 @@ async function showSummary() {
 // A4 PDF
 // ==============================
 
-function exportPDF() {
+async function exportPDF() {
 
   const incomeSection =
     document.getElementById("incomeExpenseSection");
@@ -3529,8 +3529,11 @@ function exportPDF() {
     summarySection.style.display = "block";
   }
 
-  // 収支明細を作成
-  createPDFTransactionTable();
+ // 月別集計を最新状態に更新
+await renderSummary();
+
+// 収支明細を作成
+createPDFTransactionTable();
 
   // PDF化する部分
   const pdfTarget = document.getElementById("summarySection");
