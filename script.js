@@ -3574,82 +3574,38 @@ createPDFTransactionTable();
       const imageHeight =
         canvas.height * imageWidth / canvas.width;
 
-     // A4の実際に使える高さ
+  // A4 1ページに収まるように縮小
 const usableHeight = pageHeight - margin * 2;
+const usableWidth = pageWidth - margin * 2;
 
-// キャンバス上で、A4 1ページ分に相当する高さ
-const pageHeightPx =
-  canvas.width * usableHeight / usableWidth;
+let finalWidth = usableWidth;
+let finalHeight =
+  canvas.height * finalWidth / canvas.width;
 
-// 何ページ必要か計算
-const totalPages =
-  Math.ceil(canvas.height / pageHeightPx);
+// 高さがA4を超える場合は、全体を縮小
+if (finalHeight > usableHeight) {
 
-for (let page = 0; page < totalPages; page++) {
+  finalHeight = usableHeight;
 
-  if (page > 0) {
-    pdf.addPage();
-  }
-
-  // このページに入れる部分だけを切り出す
-  const startY =
-    Math.floor(page * pageHeightPx);
-
-  const remainingPx =
-    canvas.height - startY;
-
-  const sliceHeight =
-    Math.min(pageHeightPx, remainingPx);
-
-  const pageCanvas =
-    document.createElement("canvas");
-
-  pageCanvas.width = canvas.width;
-  pageCanvas.height = sliceHeight;
-
-  const pageContext =
-    pageCanvas.getContext("2d");
-
-  pageContext.fillStyle = "#ffffff";
-  pageContext.fillRect(
-    0,
-    0,
-    pageCanvas.width,
-    pageCanvas.height
-  );
-
-  pageContext.drawImage(
-    canvas,
-    0,
-    startY,
-    canvas.width,
-    sliceHeight,
-    0,
-    0,
-    canvas.width,
-    sliceHeight
-  );
-
-  const pageImage =
-    pageCanvas.toDataURL(
-      "image/jpeg",
-      0.95
-    );
-
-  const pageImageHeight =
-    sliceHeight *
-    imageWidth /
-    canvas.width;
-
-  pdf.addImage(
-    pageImage,
-    "JPEG",
-    margin,
-    margin,
-    imageWidth,
-    pageImageHeight
-  );
+  finalWidth =
+    canvas.width * finalHeight / canvas.height;
 }
+
+// A4中央に配置
+const x =
+  margin + (usableWidth - finalWidth) / 2;
+
+const y =
+  margin + (usableHeight - finalHeight) / 2;
+
+pdf.addImage(
+  canvas.toDataURL("image/jpeg", 0.95),
+  "JPEG",
+  x,
+  y,
+  finalWidth,
+  finalHeight
+);
 
       // 現在の年月をファイル名にする
       const yearMonth =
