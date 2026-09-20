@@ -3544,7 +3544,11 @@ createPDFTransactionTable();
     alert("PDF対象が見つかりません");
     return;
   }
-
+// PDF作成時だけA4向けの横幅にする
+pdfTarget.style.width = "900px";
+pdfTarget.style.maxWidth = "900px";
+pdfTarget.style.margin = "0 auto";
+  
   // 少し待って画面の描画を完了させる
   setTimeout(async () => {
 
