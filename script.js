@@ -3574,9 +3574,8 @@ createPDFTransactionTable();
       const imageHeight =
         canvas.height * imageWidth / canvas.width;
 
-  // A4 1ページに収まるように縮小
+ // A4 1ページに収まるように縮小
 const usableHeight = pageHeight - margin * 2;
-const usableWidth = pageWidth - margin * 2;
 
 let finalWidth = usableWidth;
 let finalHeight =
