@@ -3528,8 +3528,7 @@ async function exportPDF() {
   if (summarySection) {
     summarySection.style.display = "block";
   }
-// PDF専用デザインを適用
-summarySection?.classList.add("pdf-export-mode");
+
   
  // 月別集計を最新状態に更新
 await renderSummary();
