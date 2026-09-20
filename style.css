@@ -393,13 +393,13 @@ select {
     border-bottom: 1px solid #999;
   }
 
-  .pdf-transaction-table {
-    width: 100%;
-    min-width: 0;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 7.5px;
-  }
+.pdf-transaction-table {
+  width: 75%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 8.5px;
+}
 
   .pdf-transaction-table th,
   .pdf-transaction-table td {
