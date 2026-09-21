@@ -459,4 +459,83 @@ select {
     padding: 3px;
   }
 
+/* ==================================================
+   A4 PDF 最終調整
+   ================================================== */
 
+@media print {
+
+  /* ==============================
+     部費状況を非表示
+     ============================== */
+
+  #summaryContent .summary-card:nth-child(4) {
+    display: none !important;
+  }
+
+  /* ==============================
+     月別集計を2列でコンパクトに
+     ============================== */
+
+  #summaryContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin: 0;
+  }
+
+  #summaryContent .summary-card {
+    padding: 4px;
+  }
+
+  #summaryContent .summary-card h3 {
+    font-size: 9px;
+    margin: 0 0 2px 0;
+    padding: 0 0 1px 0;
+  }
+
+  #summaryContent .summary-row {
+    font-size: 8px;
+    line-height: 1.1;
+    padding: 1px 0;
+  }
+
+  #summaryContent .summary-row strong {
+    font-size: 8px;
+  }
+
+  #summaryContent .summary-total {
+    font-size: 9px;
+    margin-top: 1px;
+    padding-top: 1px;
+  }
+
+  #summaryContent .summary-total strong {
+    font-size: 9px;
+  }
+
+  /* ==============================
+     収支明細を大きく
+     ============================== */
+
+  #pdfTransactionSection {
+    margin-top: 5px;
+  }
+
+  #pdfTransactionSection h3 {
+    font-size: 11px;
+    margin: 4px 0 3px 0;
+  }
+
+  .pdf-transaction-table {
+    font-size: 9px;
+  }
+
+  .pdf-transaction-table th,
+  .pdf-transaction-table td {
+    padding: 3px 4px;
+    height: 17px;
+    line-height: 1.2;
+  }
+
+}
