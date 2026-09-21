@@ -394,7 +394,7 @@ select {
   }
 
 .pdf-transaction-table {
-  width: 75%;
+  width: 100%;
   min-width: 0;
   table-layout: fixed;
   border-collapse: collapse;
