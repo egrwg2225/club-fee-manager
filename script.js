@@ -3561,10 +3561,55 @@ if (feeCard) {
     try {
 
       const canvas = await html2canvas(pdfTarget, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
+  scale: 3,
+  useCORS: true,
+  backgroundColor: "#ffffff",
+
+  onclone: (clonedDoc) => {
+
+    const style = clonedDoc.createElement("style");
+
+    style.textContent = `
+      #summaryContent {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 5px !important;
+        margin: 0 !important;
+      }
+
+      #summaryContent .summary-card {
+        padding: 5px !important;
+      }
+
+      #summaryContent .summary-card h3 {
+        font-size: 10px !important;
+        margin: 0 0 3px 0 !important;
+      }
+
+      #summaryContent .summary-row {
+        font-size: 8px !important;
+        line-height: 1.1 !important;
+        padding: 1px 0 !important;
+      }
+
+      #summaryContent .summary-row strong {
+        font-size: 8px !important;
+      }
+
+      #summaryContent .summary-total {
+        font-size: 9px !important;
+        margin-top: 2px !important;
+        padding-top: 2px !important;
+      }
+
+      #summaryContent .summary-total strong {
+        font-size: 9px !important;
+      }
+    `;
+
+    clonedDoc.head.appendChild(style);
+  }
+});
 
       const { jsPDF } = window.jspdf;
 
