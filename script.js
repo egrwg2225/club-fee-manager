@@ -3571,108 +3571,167 @@ if (feeCard) {
 
   style.textContent = `
 
-    /* =========================
-       PDF用 月別集計レイアウト
-       ========================= */
+/* =========================
+   PDF用 月別集計レイアウト
+   ========================= */
 
-    #summaryContent {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      grid-template-rows: auto auto !important;
-      column-gap: 6px !important;
-      row-gap: 6px !important;
-      margin: 0 !important;
-      align-items: start !important;
-    }
-
-
-    /* 月間収支
-       → 左側を上下いっぱい使用 */
-    #summaryContent .summary-card:has(#summaryBalance) {
-      grid-column: 1 !important;
-      grid-row: 1 / span 2 !important;
-      padding: 8px !important;
-    }
+/* 月別集計全体 */
+#summaryContent {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 8px !important;
+  row-gap: 8px !important;
+  margin: 0 !important;
+  align-items: start !important;
+}
 
 
-    /* 収入の内訳
-       → 右上 */
-    #summaryContent .summary-card:has(#summaryIncomeBreakdown) {
-      grid-column: 2 !important;
-      grid-row: 1 !important;
-      padding: 6px !important;
-    }
+/* =========================
+   月間収支
+   ========================= */
+
+#summaryContent .summary-card:has(#summaryBalance) {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+
+  padding: 7px 8px !important;
+  margin: 0 !important;
+
+  min-height: 0 !important;
+}
 
 
-    /* 支出の内訳
-       → 右下 */
-    #summaryContent .summary-card:has(#summaryExpenseBreakdown) {
-      grid-column: 2 !important;
-      grid-row: 2 !important;
-      padding: 6px !important;
-    }
+/* 月間収支の中の不要な収入内訳を削除 */
+#summaryContent .summary-card:has(#summaryBalance)
+  #summaryIncomeBreakdown {
+  display: none !important;
+}
 
 
-    /* 月間収支の中に残っている
-       「収入の内訳」はPDFでは非表示 */
-    #summaryContent .summary-card:has(#summaryBalance)
-      #summaryIncomeBreakdown {
-      display: none !important;
-    }
+/* =========================
+   収入内訳
+   ========================= */
+
+#summaryContent .summary-card:has(#summaryIncomeBreakdown) {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+
+  padding: 7px 8px !important;
+  margin: 0 !important;
+
+  min-height: 0 !important;
+}
 
 
-    /* カード見出し */
-    #summaryContent .summary-card h3 {
-      font-size: 10px !important;
-      margin: 0 0 4px 0 !important;
-    }
+/* =========================
+   支出内訳
+   ========================= */
+
+#summaryContent .summary-card:has(#summaryExpenseBreakdown) {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+
+  padding: 7px 8px !important;
+  margin: 0 !important;
+
+  min-height: 0 !important;
+}
 
 
-    /* 金額・項目 */
-    #summaryContent .summary-row {
-      font-size: 8px !important;
-      line-height: 1.15 !important;
-      padding: 1px 0 !important;
-    }
+/* =========================
+   見出し
+   ========================= */
 
-    #summaryContent .summary-row strong {
-      font-size: 8px !important;
-    }
+#summaryContent .summary-card h3 {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
 
-
-    /* 今月残高 */
-    #summaryContent .summary-total {
-      font-size: 10px !important;
-      margin-top: 3px !important;
-      padding-top: 3px !important;
-    }
-
-    #summaryContent .summary-total strong {
-      font-size: 10px !important;
-    }
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+}
 
 
-    /* 収支明細 */
-    #pdfTransactionSection {
-      margin-top: 8px !important;
-    }
+/* =========================
+   内訳
+   ========================= */
 
-    #pdfTransactionSection h3 {
-      font-size: 13px !important;
-      margin: 5px 0 4px 0 !important;
-    }
+#summaryContent .summary-row {
+  font-size: 9px !important;
+  line-height: 1.25 !important;
 
-    .pdf-transaction-table {
-      font-size: 8.5px !important;
-    }
+  padding: 1.5px 0 !important;
+}
 
-    .pdf-transaction-table th,
-    .pdf-transaction-table td {
-      padding: 3px 4px !important;
-      line-height: 1.2 !important;
-    }
+#summaryContent .summary-row strong {
+  font-size: 9px !important;
+}
 
-  `;
+
+/* =========================
+   今月残高
+   ========================= */
+
+#summaryContent .summary-total {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+
+  margin-top: 4px !important;
+  padding-top: 3px !important;
+}
+
+#summaryContent .summary-total strong {
+  font-size: 11px !important;
+}
+
+
+/* =========================
+   収支明細
+   ========================= */
+
+#pdfTransactionSection {
+  margin-top: 10px !important;
+  width: 100% !important;
+}
+
+#pdfTransactionSection h3 {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+
+  margin: 6px 0 5px 0 !important;
+  padding: 0 !important;
+}
+
+
+/* 明細テーブルを大きく */
+.pdf-transaction-table {
+  width: 100% !important;
+
+  font-size: 10px !important;
+
+  border-collapse: collapse !important;
+}
+
+
+/* 明細セル */
+.pdf-transaction-table th,
+.pdf-transaction-table td {
+  padding: 4px 5px !important;
+
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+
+  height: 19px !important;
+}
+
+
+/* 見出しを少し強調 */
+.pdf-transaction-table th {
+  font-size: 10px !important;
+  font-weight: bold !important;
+}
+
+`;
 
   clonedDoc.head.appendChild(style);
 }
