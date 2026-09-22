@@ -3605,6 +3605,14 @@ if (feeCard) {
       #summaryContent .summary-total strong {
         font-size: 9px !important;
       }
+
+      #summaryContent .summary-card:has(#summaryExpenseBreakdown) {
+  grid-column: 2 !important;
+}
+
+#summaryContent .summary-card:has(#summaryIncomeBreakdown) {
+  grid-column: 1 !important;
+}
     `;
 
     clonedDoc.head.appendChild(style);
