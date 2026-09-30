@@ -3536,16 +3536,7 @@ await renderSummary();
 // 収支明細を作成
 createPDFTransactionTable();
 
-  // PDFでは「部費状況」を非表示
-const feeElement =
-  document.getElementById("summaryFeeExpected");
 
-const feeCard =
-  feeElement?.closest(".summary-card");
-
-if (feeCard) {
-  feeCard.style.display = "none";
-}
 
   // PDF化する部分
   const pdfTarget = document.getElementById("summarySection");
@@ -3734,6 +3725,18 @@ if (feeCard) {
 `;
 
   clonedDoc.head.appendChild(style);
+
+  // PDFのコピー側だけ「部費状況」を削除
+  const feeElement =
+    clonedDoc.getElementById("summaryFeeExpected");
+
+  const feeCard =
+    feeElement?.closest(".summary-card");
+
+  if (feeCard) {
+    feeCard.remove();
+  }
+
 }
 });
 
