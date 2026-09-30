@@ -3727,14 +3727,14 @@ createPDFTransactionTable();
 /* 収入 */
 .pdf-transaction-table th:nth-child(4),
 .pdf-transaction-table td:nth-child(4) {
-  width: 13% !important;
+  width: 15% !important;
   white-space: nowrap !important;
 }
 
 /* 支出 */
 .pdf-transaction-table th:nth-child(5),
 .pdf-transaction-table td:nth-child(5) {
-  width: 13% !important;
+  width: 15% !important;
   white-space: nowrap !important;
 }
 
