@@ -3718,7 +3718,7 @@ createPDFTransactionTable();
 /* 内訳 */
 .pdf-transaction-table th:nth-child(3),
 .pdf-transaction-table td:nth-child(3) {
-  width: 37% !important;
+  width: 33% !important;
   white-space: normal !important;
   overflow-wrap: anywhere !important;
   word-break: break-word !important;
