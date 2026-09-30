@@ -3697,26 +3697,69 @@ createPDFTransactionTable();
 /* 明細テーブルを大きく */
 .pdf-transaction-table {
   width: 100% !important;
-
   font-size: 10px !important;
-
   border-collapse: collapse !important;
+  table-layout: fixed !important;
 }
 
+/* 日付 */
+.pdf-transaction-table th:nth-child(1),
+.pdf-transaction-table td:nth-child(1) {
+  width: 11% !important;
+  white-space: nowrap !important;
+}
 
-/* 明細セル */
+/* 分類 */
+.pdf-transaction-table th:nth-child(2),
+.pdf-transaction-table td:nth-child(2) {
+  width: 12% !important;
+}
+
+/* 内訳 */
+.pdf-transaction-table th:nth-child(3),
+.pdf-transaction-table td:nth-child(3) {
+  width: 37% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* 収入 */
+.pdf-transaction-table th:nth-child(4),
+.pdf-transaction-table td:nth-child(4) {
+  width: 13% !important;
+  white-space: nowrap !important;
+}
+
+/* 支出 */
+.pdf-transaction-table th:nth-child(5),
+.pdf-transaction-table td:nth-child(5) {
+  width: 13% !important;
+  white-space: nowrap !important;
+}
+
+/* メモ */
+.pdf-transaction-table th:nth-child(6),
+.pdf-transaction-table td:nth-child(6) {
+  width: 14% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
 .pdf-transaction-table th,
 .pdf-transaction-table td {
   padding: 4px 5px !important;
-
   font-size: 10px !important;
   line-height: 1.2 !important;
 
-  height: 19px !important;
+  /* 高さを固定しない */
+  height: auto !important;
+  min-height: 19px !important;
+
+  vertical-align: middle !important;
 }
 
-
-/* 見出しを少し強調 */
 .pdf-transaction-table th {
   font-size: 10px !important;
   font-weight: bold !important;
