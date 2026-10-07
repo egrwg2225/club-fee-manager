@@ -3565,7 +3565,57 @@ createPDFTransactionTable();
 /* =========================
    PDF用 月別集計レイアウト
    ========================= */
+/* PDF全体をA4の横幅に合わせて拡大 */
+#summarySection {
+width: 1000px !important;
+max-width: none !important;
+box-sizing: border-box !important;
+padding: 20px !important;
+margin: 0 auto !important;
+background: #ffffff !important;
+}
 
+#summaryContent {
+width: 100% !important;
+box-sizing: border-box !important;
+}
+
+/* 集計カードを枠線・薄い背景色付きにする */
+#summaryContent .summary-card {
+box-sizing: border-box !important;
+border: 1px solid #b8c2cc !important;
+border-radius: 5px !important;
+background: #f8fafc !important;
+padding: 12px !important;
+box-shadow: none !important;
+}
+
+/* 収支明細を横幅いっぱいにする */
+#pdfTransactionSection {
+width: 100% !important;
+box-sizing: border-box !important;
+margin-top: 16px !important;
+}
+
+.pdf-transaction-table {
+width: 100% !important;
+table-layout: fixed !important;
+border-collapse: collapse !important;
+box-sizing: border-box !important;
+}
+
+.pdf-transaction-table th,
+.pdf-transaction-table td {
+box-sizing: border-box !important;
+border: 1px solid #b8c2cc !important;
+overflow-wrap: anywhere !important;
+word-break: normal !important;
+}
+
+.pdf-transaction-table th {
+background: #e9eef4 !important;
+color: #202833 !important;
+}
 /* 月別集計全体 */
 #summaryContent {
   display: grid !important;
