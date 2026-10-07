@@ -2720,3 +2720,1721 @@ async function updateMemberFee(
 
   const { error } =
     await supabaseClient
+      .from("member_fees")
+      .update({
+        amount:
+          amount
+      })
+      .eq(
+        "member_id",
+        memberId
+      )
+      .eq(
+        "year_month",
+        currentYearMonth
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "部費の保存に失敗しました。"
+    );
+
+    return;
+
+  }
+
+  currentFee.amount =
+    amount;
+
+  const member =
+    members.find(
+      item =>
+        item.id ===
+        memberId
+    );
+
+  if (member) {
+
+    const {
+      error: memberError
+    } =
+      await supabaseClient
+        .from("members")
+        .update({
+          monthly_fee:
+            amount
+        })
+        .eq(
+          "id",
+          memberId
+        );
+
+    if (memberError) {
+
+      console.error(
+        memberError
+      );
+
+    } else {
+
+      member.monthly_fee =
+        amount;
+
+    }
+
+  }
+
+  renderMembers();
+
+  await calculateTotals();
+  await refreshSummaryIfVisible();
+
+}
+
+
+// ==============================
+// 支払済 / 未払い
+// ==============================
+
+async function toggleMemberPayment(
+  memberId
+) {
+
+  if (!isEditor()) return;
+
+  const fee =
+    memberFees.find(
+      item =>
+        item.member_id ===
+        memberId
+    );
+
+  if (!fee) {
+
+    alert(
+      "部費データが見つかりません。"
+    );
+
+    return;
+
+  }
+
+  const newPaid =
+    !fee.paid;
+
+  const { error } =
+    await supabaseClient
+      .from("member_fees")
+      .update({
+        paid:
+          newPaid,
+
+        paid_at:
+          newPaid
+            ? new Date().toISOString()
+            : null
+      })
+      .eq(
+        "id",
+        fee.id
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "支払い状態の保存に失敗しました。"
+    );
+
+    return;
+
+  }
+
+  fee.paid =
+    newPaid;
+
+  fee.paid_at =
+    newPaid
+      ? new Date().toISOString()
+      : null;
+
+  renderMembers();
+
+  await calculateTotals();
+  await refreshSummaryIfVisible();
+
+}
+
+
+// ==============================
+// 部員削除
+// ==============================
+
+async function deactivateMember(
+  id
+) {
+
+  if (!isEditor()) return;
+
+  if (
+    !confirm(
+      "この部員を一覧から削除しますか？\n過去の部費履歴は残ります。"
+    )
+  ) {
+
+    return;
+
+  }
+
+  const currentYearMonth =
+    getYearMonth();
+
+  const {
+    error: feeDeleteError
+  } =
+    await supabaseClient
+      .from("member_fees")
+      .delete()
+      .eq(
+        "member_id",
+        id
+      )
+      .eq(
+        "year_month",
+        currentYearMonth
+      );
+
+  if (feeDeleteError) {
+
+    console.error(
+      feeDeleteError
+    );
+
+    alert(
+      "今月の部費データの削除に失敗しました。\n\n" +
+      "エラー内容：\n" +
+      feeDeleteError.message
+    );
+
+    return;
+
+  }
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("members")
+      .update({
+        active:
+          false,
+
+        left_year_month:
+          currentYearMonth
+      })
+      .eq(
+        "id",
+        id
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "部員の削除に失敗しました。"
+    );
+
+    return;
+
+  }
+
+  members =
+    members.filter(
+      member =>
+        member.id !== id
+    );
+
+  memberFees =
+    memberFees.filter(
+      fee =>
+        fee.member_id !== id
+    );
+
+  await loadMembers();
+
+  await calculateTotals();
+  await refreshSummaryIfVisible();
+
+}
+
+
+// ==============================
+// メニュー
+// ==============================
+
+function showIncomeExpense() {
+
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "block";
+
+  }
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "none";
+
+  }
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "none";
+
+  }
+
+  incomeSection?.scrollIntoView({
+    behavior:
+      "smooth"
+  });
+
+}
+
+
+async function showMembers() {
+
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "none";
+
+  }
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "none";
+
+  }
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "block";
+
+  }
+
+  await loadMembers();
+
+  membersSection?.scrollIntoView({
+    behavior:
+      "smooth"
+  });
+
+}
+
+
+// ==============================
+// 月別集計
+// ==============================
+
+async function renderSummary() {
+
+  let incomeTotal = 0;
+  let expenseTotal = 0;
+
+  transactions.forEach(
+    row => {
+
+      incomeTotal +=
+        Number(row.income) || 0;
+
+      expenseTotal +=
+        Number(row.expense) || 0;
+
+    }
+  );
+
+  let feeExpected = 0;
+  let feePaid = 0;
+  let feeUnpaid = 0;
+
+  members.forEach(
+    member => {
+
+      const fee =
+        memberFees.find(
+          item =>
+            item.member_id ===
+            member.id
+        );
+
+      const amount =
+        Number(
+          fee?.amount ??
+          member.monthly_fee
+        ) || 0;
+
+      feeExpected +=
+        amount;
+
+      if (fee?.paid) {
+
+        feePaid +=
+          amount;
+
+      } else {
+
+        feeUnpaid +=
+          amount;
+
+      }
+
+    }
+  );
+
+  const autoMemberFee =
+    isAutoMemberFeeIncome();
+
+  if (autoMemberFee) {
+
+    incomeTotal +=
+      feePaid;
+
+  }
+
+  const carryOver =
+    await getPreviousMonthBalance();
+
+  const currentBalance =
+    carryOver +
+    incomeTotal -
+    expenseTotal;
+
+  const carryElement =
+    document.getElementById(
+      "summaryCarryOver"
+    );
+
+  const incomeElement =
+    document.getElementById(
+      "summaryIncome"
+    );
+
+  const expenseElement =
+    document.getElementById(
+      "summaryExpense"
+    );
+
+  const balanceElement =
+    document.getElementById(
+      "summaryBalance"
+    );
+
+  if (carryElement) {
+
+    carryElement.textContent =
+      formatYen(carryOver);
+
+  }
+
+  if (incomeElement) {
+
+    incomeElement.textContent =
+      formatYen(incomeTotal);
+
+  }
+
+  if (expenseElement) {
+
+    expenseElement.textContent =
+      formatYen(expenseTotal);
+
+  }
+
+  if (balanceElement) {
+
+    balanceElement.textContent =
+      formatYen(currentBalance);
+
+  }
+
+
+  // 収入分類
+  const incomeMap = {};
+
+  transactions.forEach(
+    row => {
+
+      const amount =
+        Number(row.income) || 0;
+
+      if (amount <= 0) return;
+
+      const category =
+        row.category?.trim() ||
+        "未分類";
+
+      incomeMap[category] =
+        (
+          incomeMap[category] ||
+          0
+        ) + amount;
+
+    }
+  );
+
+  if (
+    autoMemberFee &&
+    feePaid > 0
+  ) {
+
+    incomeMap["部費"] =
+      (
+        incomeMap["部費"] ||
+        0
+      ) + feePaid;
+
+  }
+
+  renderSummaryBreakdown(
+    "summaryIncomeBreakdown",
+    incomeMap,
+    "収入はありません。"
+  );
+
+
+  // 支出分類
+  const expenseMap = {};
+
+  transactions.forEach(
+    row => {
+
+      const amount =
+        Number(row.expense) || 0;
+
+      if (amount <= 0) return;
+
+      const category =
+        row.category?.trim() ||
+        "未分類";
+
+      expenseMap[category] =
+        (
+          expenseMap[category] ||
+          0
+        ) + amount;
+
+    }
+  );
+
+  renderSummaryBreakdown(
+    "summaryExpenseBreakdown",
+    expenseMap,
+    "支出はありません。"
+  );
+
+
+  const expectedElement =
+    document.getElementById(
+      "summaryFeeExpected"
+    );
+
+  const paidElement =
+    document.getElementById(
+      "summaryFeePaid"
+    );
+
+  const unpaidElement =
+    document.getElementById(
+      "summaryFeeUnpaid"
+    );
+
+  if (expectedElement) {
+
+    expectedElement.textContent =
+      formatYen(
+        feeExpected
+      );
+
+  }
+
+  if (paidElement) {
+
+    paidElement.textContent =
+      formatYen(
+        feePaid
+      );
+
+  }
+
+  if (unpaidElement) {
+
+    unpaidElement.textContent =
+      formatYen(
+        feeUnpaid
+      );
+
+  }
+
+}
+
+
+// ==============================
+// 月別集計内訳
+// ==============================
+
+function renderSummaryBreakdown(
+  elementId,
+  data,
+  emptyMessage
+) {
+
+  const area =
+    document.getElementById(
+      elementId
+    );
+
+  if (!area) return;
+
+  const entries =
+    Object.entries(
+      data
+    );
+
+  if (!entries.length) {
+
+    area.textContent =
+      emptyMessage;
+
+    return;
+
+  }
+
+  entries.sort(
+    (a, b) =>
+      b[1] - a[1]
+  );
+
+  area.innerHTML =
+    "";
+
+  entries.forEach(
+    ([category, amount]) => {
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "summary-row";
+
+      const name =
+        document.createElement(
+          "span"
+        );
+
+      name.textContent =
+        category;
+
+      const value =
+        document.createElement(
+          "strong"
+        );
+
+      value.textContent =
+        formatYen(
+          amount
+        );
+
+      row.appendChild(name);
+      row.appendChild(value);
+
+      area.appendChild(row);
+
+    }
+  );
+
+}
+
+
+// ==============================
+// 月別集計表示
+// ==============================
+
+async function showSummary() {
+
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (incomeSection) {
+
+    incomeSection.style.display =
+      "none";
+
+  }
+
+  if (membersSection) {
+
+    membersSection.style.display =
+      "none";
+
+  }
+
+  if (summarySection) {
+
+    summarySection.style.display =
+      "block";
+
+  }
+
+  await renderSummary();
+
+  summarySection?.scrollIntoView({
+    behavior:
+      "smooth"
+  });
+
+}
+
+
+// ==============================
+// A4 PDF
+// ==============================
+
+async function exportPDF() {
+
+  const incomeSection =
+    document.getElementById(
+      "incomeExpenseSection"
+    );
+
+  const membersSection =
+    document.getElementById(
+      "membersSection"
+    );
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (!summarySection) {
+
+    alert(
+      "PDF対象が見つかりません"
+    );
+
+    return;
+
+  }
+
+
+  // 現在の表示状態を保存
+  const previousIncomeDisplay =
+    incomeSection?.style.display ?? "";
+
+  const previousMembersDisplay =
+    membersSection?.style.display ?? "";
+
+  const previousSummaryDisplay =
+    summarySection?.style.display ?? "";
+
+
+  try {
+
+    // PDF用の表示状態
+    if (incomeSection) {
+
+      incomeSection.style.display =
+        "none";
+
+    }
+
+    if (membersSection) {
+
+      membersSection.style.display =
+        "none";
+
+    }
+
+    if (summarySection) {
+
+      summarySection.style.display =
+        "block";
+
+    }
+
+
+    // 月別集計を最新状態に更新
+    await renderSummary();
+
+
+    // 古いPDF明細があれば削除してから作成
+    createPDFTransactionTable();
+
+
+    // ブラウザに描画させる
+    await new Promise(
+      resolve =>
+        requestAnimationFrame(
+          () => resolve()
+        )
+    );
+
+
+    const canvas =
+      await html2canvas(
+        summarySection,
+        {
+          scale: 3,
+
+          useCORS:
+            true,
+
+          backgroundColor:
+            "#ffffff",
+
+          onclone:
+            (clonedDoc) => {
+
+              // =========================================
+              // PDF専用レイアウト
+              // =========================================
+
+              const style =
+                clonedDoc.createElement(
+                  "style"
+                );
+
+              style.textContent = `
+
+/* =========================================
+   PDF全体
+   ========================================= */
+
+#summarySection {
+  width: 760px !important;
+  max-width: 760px !important;
+
+  box-sizing: border-box !important;
+
+  margin: 0 !important;
+
+  padding: 8px 8px 6px 8px !important;
+
+  background: #ffffff !important;
+}
+
+
+/* =========================================
+   タイトル
+   ========================================= */
+
+#summarySection h2 {
+  font-size: 25px !important;
+
+  line-height: 1.15 !important;
+
+  margin: 0 0 10px 0 !important;
+
+  padding: 0 0 5px 0 !important;
+
+  border-bottom:
+    2px solid #9aa4ae !important;
+}
+
+
+/* =========================================
+   月別集計
+   ========================================= */
+
+#summaryContent {
+
+  display: grid !important;
+
+  grid-template-columns:
+    1fr 1fr !important;
+
+  grid-template-rows:
+    auto auto !important;
+
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+
+  column-gap: 10px !important;
+
+  row-gap: 10px !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  align-items: stretch !important;
+}
+
+
+/* =========================================
+   共通カード
+   ========================================= */
+
+#summaryContent .summary-card {
+
+  box-sizing: border-box !important;
+
+  border:
+    1px solid #aeb8c2 !important;
+
+  border-radius: 5px !important;
+
+  background: #f7f9fb !important;
+
+  padding: 10px 12px !important;
+
+  margin: 0 !important;
+
+  box-shadow: none !important;
+
+  min-height: 0 !important;
+}
+
+
+/* =========================================
+   月間収支
+   ========================================= */
+
+#summaryContent
+.summary-card:has(#summaryBalance) {
+
+  grid-column: 1 !important;
+
+  grid-row:
+    1 / span 2 !important;
+
+  min-height:
+    155px !important;
+}
+
+
+/* 月間収支内の収入内訳は非表示 */
+
+#summaryContent
+.summary-card:has(#summaryBalance)
+#summaryIncomeBreakdown {
+
+  display: none !important;
+}
+
+
+/* =========================================
+   収入の内訳
+   ========================================= */
+
+#summaryContent
+.summary-card:has(#summaryIncomeBreakdown) {
+
+  grid-column: 2 !important;
+
+  grid-row: 1 !important;
+}
+
+
+/* =========================================
+   支出の分類
+   ========================================= */
+
+#summaryContent
+.summary-card:has(#summaryExpenseBreakdown) {
+
+  grid-column: 2 !important;
+
+  grid-row: 2 !important;
+}
+
+
+/* =========================================
+   カード見出し
+   ========================================= */
+
+#summaryContent
+.summary-card h3 {
+
+  font-size: 14px !important;
+
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
+
+  margin:
+    0 0 6px 0 !important;
+
+  padding: 0 !important;
+}
+
+
+/* =========================================
+   集計行
+   ========================================= */
+
+#summaryContent
+.summary-row {
+
+  font-size: 11px !important;
+
+  line-height: 1.25 !important;
+
+  padding: 2px 0 !important;
+
+  margin: 0 !important;
+}
+
+
+/* 金額 */
+
+#summaryContent
+.summary-row strong {
+
+  font-size: 11px !important;
+}
+
+
+/* =========================================
+   今月残高
+   ========================================= */
+
+#summaryContent
+.summary-total {
+
+  font-size: 14px !important;
+
+  line-height: 1.2 !important;
+
+  margin-top: 7px !important;
+
+  padding-top: 6px !important;
+
+  border-top:
+    1px solid #aeb8c2 !important;
+}
+
+
+#summaryContent
+.summary-total strong {
+
+  font-size: 18px !important;
+}
+
+
+/* =========================================
+   収支明細
+   ========================================= */
+
+#pdfTransactionSection {
+
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+
+  margin:
+    12px 0 0 0 !important;
+
+  padding: 0 !important;
+}
+
+
+/* 収支明細タイトル */
+
+#pdfTransactionSection h3 {
+
+  font-size: 18px !important;
+
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
+
+  margin:
+    0 0 5px 0 !important;
+
+  padding: 0 !important;
+}
+
+
+/* =========================================
+   表
+   ========================================= */
+
+.pdf-transaction-table {
+
+  width: 100% !important;
+
+  table-layout: fixed !important;
+
+  border-collapse:
+    collapse !important;
+
+  box-sizing:
+    border-box !important;
+
+  font-size:
+    10.5px !important;
+}
+
+
+/* 表セル */
+
+.pdf-transaction-table th,
+.pdf-transaction-table td {
+
+  box-sizing:
+    border-box !important;
+
+  border:
+    1px solid #aeb8c2 !important;
+
+  padding:
+    3px 4px !important;
+
+  font-size:
+    10.5px !important;
+
+  line-height:
+    1.15 !important;
+
+  height:
+    18px !important;
+
+  vertical-align:
+    middle !important;
+
+  overflow-wrap:
+    anywhere !important;
+}
+
+
+/* 表ヘッダー */
+
+.pdf-transaction-table th {
+
+  background:
+    #e8edf2 !important;
+
+  color:
+    #202833 !important;
+
+  font-weight:
+    700 !important;
+
+  padding-top:
+    4px !important;
+
+  padding-bottom:
+    4px !important;
+}
+
+
+/* =========================================
+   列幅
+   ========================================= */
+
+.pdf-transaction-table th:nth-child(1),
+.pdf-transaction-table td:nth-child(1) {
+
+  width: 9% !important;
+}
+
+
+.pdf-transaction-table th:nth-child(2),
+.pdf-transaction-table td:nth-child(2) {
+
+  width: 16% !important;
+}
+
+
+.pdf-transaction-table th:nth-child(3),
+.pdf-transaction-table td:nth-child(3) {
+
+  width: 39% !important;
+}
+
+
+.pdf-transaction-table th:nth-child(4),
+.pdf-transaction-table td:nth-child(4) {
+
+  width: 12% !important;
+}
+
+
+.pdf-transaction-table th:nth-child(5),
+.pdf-transaction-table td:nth-child(5) {
+
+  width: 12% !important;
+}
+
+
+.pdf-transaction-table th:nth-child(6),
+.pdf-transaction-table td:nth-child(6) {
+
+  width: 12% !important;
+}
+
+`;
+
+              clonedDoc.head.appendChild(
+                style
+              );
+
+
+              // =========================================
+              // PDFだけ「部費状況」を削除
+              // =========================================
+
+              const feeElement =
+                clonedDoc.getElementById(
+                  "summaryFeeExpected"
+                );
+
+              const feeCard =
+                feeElement?.closest(
+                  ".summary-card"
+                );
+
+              if (feeCard) {
+
+                feeCard.remove();
+
+              }
+
+            }
+
+        }
+      );
+
+
+    // =========================================
+    // jsPDF
+    // =========================================
+
+    const {
+      jsPDF
+    } =
+      window.jspdf;
+
+    const pdf =
+      new jsPDF({
+        orientation:
+          "portrait",
+
+        unit:
+          "mm",
+
+        format:
+          "a4"
+      });
+
+
+    const pageWidth =
+      210;
+
+    const pageHeight =
+      297;
+
+    const margin =
+      5;
+
+    const usableWidth =
+      pageWidth -
+      margin * 2;
+
+    const usableHeight =
+      pageHeight -
+      margin * 2;
+
+
+    let finalWidth =
+      usableWidth;
+
+    let finalHeight =
+      canvas.height *
+      finalWidth /
+      canvas.width;
+
+
+    // A4を超える場合は縮小
+    if (
+      finalHeight >
+      usableHeight
+    ) {
+
+      finalHeight =
+        usableHeight;
+
+      finalWidth =
+        canvas.width *
+        finalHeight /
+        canvas.height;
+
+    }
+
+
+    // A4中央配置
+    const x =
+      margin +
+      (
+        usableWidth -
+        finalWidth
+      ) / 2;
+
+    const y =
+      margin +
+      (
+        usableHeight -
+        finalHeight
+      ) / 2;
+
+
+    pdf.addImage(
+      canvas.toDataURL(
+        "image/jpeg",
+        0.95
+      ),
+
+      "JPEG",
+
+      x,
+      y,
+
+      finalWidth,
+      finalHeight
+    );
+
+
+    // =========================================
+    // ファイル名
+    // =========================================
+
+    const yearMonth =
+      document.getElementById(
+        "monthTitle"
+      )?.textContent ||
+      `${currentYear}年${currentMonth}月`;
+
+    pdf.save(
+      `部費管理_${yearMonth}.pdf`
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "PDFの作成中にエラーが発生しました。\n" +
+      error.message
+    );
+
+
+  } finally {
+
+    // =========================================
+    // PDF作成後、元の画面状態に戻す
+    // =========================================
+
+    if (incomeSection) {
+
+      incomeSection.style.display =
+        previousIncomeDisplay;
+
+    }
+
+    if (membersSection) {
+
+      membersSection.style.display =
+        previousMembersDisplay;
+
+    }
+
+    if (summarySection) {
+
+      summarySection.style.display =
+        previousSummaryDisplay;
+
+    }
+
+    // PDF用の一時テーブルを削除
+    const pdfTable =
+      document.getElementById(
+        "pdfTransactionSection"
+      );
+
+    if (pdfTable) {
+
+      pdfTable.remove();
+
+    }
+
+  }
+
+}
+
+
+// ==============================
+// PDF収支明細
+// ==============================
+
+function createPDFTransactionTable() {
+
+  const summarySection =
+    document.getElementById(
+      "summarySection"
+    );
+
+  if (!summarySection) return;
+
+
+  const oldTable =
+    document.getElementById(
+      "pdfTransactionSection"
+    );
+
+  if (oldTable) {
+
+    oldTable.remove();
+
+  }
+
+
+  const section =
+    document.createElement(
+      "div"
+    );
+
+  section.id =
+    "pdfTransactionSection";
+
+
+  const title =
+    document.createElement(
+      "h3"
+    );
+
+  title.textContent =
+    "収支明細";
+
+  section.appendChild(
+    title
+  );
+
+
+  if (
+    !transactions ||
+    transactions.length === 0
+  ) {
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+    empty.textContent =
+      "収支明細はありません。";
+
+    empty.className =
+      "pdf-empty";
+
+    section.appendChild(
+      empty
+    );
+
+  } else {
+
+    const table =
+      document.createElement(
+        "table"
+      );
+
+    table.className =
+      "pdf-transaction-table";
+
+
+    const thead =
+      document.createElement(
+        "thead"
+      );
+
+    const headerRow =
+      document.createElement(
+        "tr"
+      );
+
+
+    [
+      "日付",
+      "分類",
+      "内訳",
+      "収入",
+      "支出",
+      "メモ"
+    ].forEach(
+      text => {
+
+        const th =
+          document.createElement(
+            "th"
+          );
+
+        th.textContent =
+          text;
+
+        headerRow.appendChild(
+          th
+        );
+
+      }
+    );
+
+
+    thead.appendChild(
+      headerRow
+    );
+
+    table.appendChild(
+      thead
+    );
+
+
+    const tbody =
+      document.createElement(
+        "tbody"
+      );
+
+
+    transactions.forEach(
+      row => {
+
+        const tr =
+          document.createElement(
+            "tr"
+          );
+
+
+        const dateTd =
+          document.createElement(
+            "td"
+          );
+
+        dateTd.textContent =
+          formatPDFDate(
+            row.date
+          );
+
+
+        const categoryTd =
+          document.createElement(
+            "td"
+          );
+
+        categoryTd.textContent =
+          row.category?.trim() ||
+          "未分類";
+
+
+        const detailTd =
+          document.createElement(
+            "td"
+          );
+
+        detailTd.textContent =
+          row.detail?.trim() ||
+          "";
+
+
+        const incomeTd =
+          document.createElement(
+            "td"
+          );
+
+        const income =
+          Number(
+            row.income
+          ) || 0;
+
+        incomeTd.textContent =
+          income > 0
+            ? formatYen(
+                income
+              )
+            : "";
+
+
+        const expenseTd =
+          document.createElement(
+            "td"
+          );
+
+        const expense =
+          Number(
+            row.expense
+          ) || 0;
+
+        expenseTd.textContent =
+          expense > 0
+            ? formatYen(
+                expense
+              )
+            : "";
+
+
+        const memoTd =
+          document.createElement(
+            "td"
+          );
+
+        memoTd.textContent =
+          row.memo?.trim() ||
+          "";
+
+
+        tr.appendChild(
+          dateTd
+        );
+
+        tr.appendChild(
+          categoryTd
+        );
+
+        tr.appendChild(
+          detailTd
+        );
+
+        tr.appendChild(
+          incomeTd
+        );
+
+        tr.appendChild(
+          expenseTd
+        );
+
+        tr.appendChild(
+          memoTd
+        );
+
+
+        tbody.appendChild(
+          tr
+        );
+
+      }
+    );
+
+
+    table.appendChild(
+      tbody
+    );
+
+    section.appendChild(
+      table
+    );
+
+  }
+
+
+  const summaryContent =
+    document.getElementById(
+      "summaryContent"
+    );
+
+
+  if (summaryContent) {
+
+    summaryContent.after(
+      section
+    );
+
+  } else {
+
+    summarySection.appendChild(
+      section
+    );
+
+  }
+
+}
+
+
+// ==============================
+// PDF日付
+// ==============================
+
+function formatPDFDate(
+  date
+) {
+
+  if (!date) return "";
+
+  const parts =
+    date.split("-");
+
+  if (
+    parts.length !== 3
+  ) {
+
+    return date;
+
+  }
+
+  return (
+    `${Number(parts[1])}/${Number(parts[2])}`
+  );
+
+}
