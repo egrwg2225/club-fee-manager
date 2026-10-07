@@ -3562,262 +3562,264 @@ createPDFTransactionTable();
 
   style.textContent = `
 
-/* =========================
-   PDF用 月別集計レイアウト
-   ========================= */
-/* PDF全体をA4の横幅に合わせて拡大 */
+/* =========================================
+   PDF専用レイアウト
+   A4をできるだけ大きく使う
+   ========================================= */
+
+/* PDF全体 */
 #summarySection {
-width: 1000px !important;
-max-width: none !important;
-box-sizing: border-box !important;
-padding: 20px !important;
-margin: 0 auto !important;
-background: #ffffff !important;
+  width: 760px !important;
+  max-width: 760px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 8px 8px 6px 8px !important;
+  background: #ffffff !important;
 }
 
-#summaryContent {
-width: 100% !important;
-box-sizing: border-box !important;
+/* タイトル */
+#summarySection h2 {
+  font-size: 25px !important;
+  line-height: 1.15 !important;
+  margin: 0 0 10px 0 !important;
+  padding: 0 0 5px 0 !important;
+  border-bottom: 2px solid #9aa4ae !important;
 }
 
-/* 集計カードを枠線・薄い背景色付きにする */
-#summaryContent .summary-card {
-box-sizing: border-box !important;
-border: 1px solid #b8c2cc !important;
-border-radius: 5px !important;
-background: #f8fafc !important;
-padding: 12px !important;
-box-shadow: none !important;
-}
+/* =========================================
+   月別集計
+   ========================================= */
 
-/* 収支明細を横幅いっぱいにする */
-#pdfTransactionSection {
-width: 100% !important;
-box-sizing: border-box !important;
-margin-top: 16px !important;
-}
-
-.pdf-transaction-table {
-width: 100% !important;
-table-layout: fixed !important;
-border-collapse: collapse !important;
-box-sizing: border-box !important;
-}
-
-.pdf-transaction-table th,
-.pdf-transaction-table td {
-box-sizing: border-box !important;
-border: 1px solid #b8c2cc !important;
-overflow-wrap: anywhere !important;
-word-break: normal !important;
-}
-
-.pdf-transaction-table th {
-background: #e9eef4 !important;
-color: #202833 !important;
-}
-/* 月別集計全体 */
 #summaryContent {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   grid-template-rows: auto auto !important;
-  column-gap: 8px !important;
-  row-gap: 8px !important;
+
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  column-gap: 10px !important;
+  row-gap: 10px !important;
+
   margin: 0 !important;
-  align-items: start !important;
+  padding: 0 !important;
+
+  align-items: stretch !important;
 }
 
+/* 共通カード */
+#summaryContent .summary-card {
+  box-sizing: border-box !important;
 
-/* =========================
+  border: 1px solid #aeb8c2 !important;
+  border-radius: 5px !important;
+
+  background: #f7f9fb !important;
+
+  padding: 10px 12px !important;
+  margin: 0 !important;
+
+  box-shadow: none !important;
+
+  min-height: 0 !important;
+}
+
+/* -----------------------------------------
    月間収支
-   ========================= */
+   左側を大きく
+   ----------------------------------------- */
 
 #summaryContent .summary-card:has(#summaryBalance) {
   grid-column: 1 !important;
   grid-row: 1 / span 2 !important;
 
-  padding: 7px 8px !important;
-  margin: 0 !important;
-
-  min-height: 0 !important;
+  min-height: 155px !important;
 }
 
-
-/* 月間収支の中の不要な収入内訳を削除 */
+/* 月間収支の中の不要な内訳をPDFでは非表示 */
 #summaryContent .summary-card:has(#summaryBalance)
   #summaryIncomeBreakdown {
   display: none !important;
 }
 
-
-/* =========================
-   収入内訳
-   ========================= */
+/* -----------------------------------------
+   収入の内訳
+   ----------------------------------------- */
 
 #summaryContent .summary-card:has(#summaryIncomeBreakdown) {
   grid-column: 2 !important;
   grid-row: 1 !important;
-
-  padding: 7px 8px !important;
-  margin: 0 !important;
-
-  min-height: 0 !important;
 }
 
-
-/* =========================
-   支出内訳
-   ========================= */
+/* -----------------------------------------
+   支出の内訳
+   ----------------------------------------- */
 
 #summaryContent .summary-card:has(#summaryExpenseBreakdown) {
   grid-column: 2 !important;
   grid-row: 2 !important;
-
-  padding: 7px 8px !important;
-  margin: 0 !important;
-
-  min-height: 0 !important;
 }
 
-
-/* =========================
-   見出し
-   ========================= */
-
+/* カード見出し */
 #summaryContent .summary-card h3 {
-  font-size: 11px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+
   line-height: 1.2 !important;
 
-  margin: 0 0 4px 0 !important;
+  margin: 0 0 6px 0 !important;
   padding: 0 !important;
 }
 
-
-/* =========================
-   内訳
-   ========================= */
-
+/* 集計行 */
 #summaryContent .summary-row {
-  font-size: 9px !important;
+  font-size: 11px !important;
   line-height: 1.25 !important;
 
-  padding: 1.5px 0 !important;
+  padding: 2px 0 !important;
+
+  margin: 0 !important;
 }
 
+/* 金額 */
 #summaryContent .summary-row strong {
-  font-size: 9px !important;
-}
-
-
-/* =========================
-   今月残高
-   ========================= */
-
-#summaryContent .summary-total {
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-
-  margin-top: 4px !important;
-  padding-top: 3px !important;
-}
-
-#summaryContent .summary-total strong {
   font-size: 11px !important;
 }
 
-
-/* =========================
-   収支明細
-   ========================= */
-
-#pdfTransactionSection {
-  margin-top: 10px !important;
-  width: 100% !important;
-}
-
-#pdfTransactionSection h3 {
+/* 今月残高 */
+#summaryContent .summary-total {
   font-size: 14px !important;
   line-height: 1.2 !important;
 
-  margin: 6px 0 5px 0 !important;
+  margin-top: 7px !important;
+  padding-top: 6px !important;
+
+  border-top: 1px solid #aeb8c2 !important;
+}
+
+#summaryContent .summary-total strong {
+  font-size: 18px !important;
+}
+
+/* =========================================
+   収支明細
+   ========================================= */
+
+#pdfTransactionSection {
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  margin: 12px 0 0 0 !important;
   padding: 0 !important;
 }
 
+/* 収支明細タイトル */
+#pdfTransactionSection h3 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
 
-/* 明細テーブルを大きく */
+  line-height: 1.2 !important;
+
+  margin: 0 0 5px 0 !important;
+  padding: 0 !important;
+}
+
+/* 表 */
 .pdf-transaction-table {
   width: 100% !important;
-  font-size: 10px !important;
-  border-collapse: collapse !important;
+
   table-layout: fixed !important;
+
+  border-collapse: collapse !important;
+
+  box-sizing: border-box !important;
+
+  font-size: 10.5px !important;
 }
 
-/* 日付 */
+/* 表のセル */
+.pdf-transaction-table th,
+.pdf-transaction-table td {
+  box-sizing: border-box !important;
+
+  border: 1px solid #aeb8c2 !important;
+
+  padding: 3px 4px !important;
+
+  font-size: 10.5px !important;
+
+  line-height: 1.15 !important;
+
+  height: 18px !important;
+
+  vertical-align: middle !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+/* 表ヘッダー */
+.pdf-transaction-table th {
+  background: #e8edf2 !important;
+
+  color: #202833 !important;
+
+  font-weight: 700 !important;
+
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* 列幅 */
 .pdf-transaction-table th:nth-child(1),
 .pdf-transaction-table td:nth-child(1) {
-  width: 11% !important;
-  white-space: nowrap !important;
+  width: 9% !important;
 }
 
-/* 分類 */
 .pdf-transaction-table th:nth-child(2),
 .pdf-transaction-table td:nth-child(2) {
+  width: 16% !important;
+}
+
+.pdf-transaction-table th:nth-child(3),
+.pdf-transaction-table td:nth-child(3) {
+  width: 39% !important;
+}
+
+.pdf-transaction-table th:nth-child(4),
+.pdf-transaction-table td:nth-child(4) {
   width: 12% !important;
 }
 
-/* 内訳 */
-.pdf-transaction-table th:nth-child(3),
-.pdf-transaction-table td:nth-child(3) {
-  width: 33% !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-}
-
-/* 収入 */
-.pdf-transaction-table th:nth-child(4),
-.pdf-transaction-table td:nth-child(4) {
-  width: 15% !important;
-  white-space: nowrap !important;
-}
-
-/* 支出 */
 .pdf-transaction-table th:nth-child(5),
 .pdf-transaction-table td:nth-child(5) {
-  width: 15% !important;
-  white-space: nowrap !important;
+  width: 12% !important;
 }
 
-/* メモ */
 .pdf-transaction-table th:nth-child(6),
 .pdf-transaction-table td:nth-child(6) {
-  width: 14% !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
+  width: 12% !important;
 }
 
-.pdf-transaction-table th,
-.pdf-transaction-table td {
-  padding: 4px 5px !important;
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-
-  /* 高さを固定しない */
-  height: auto !important;
-  min-height: 19px !important;
-
-  vertical-align: middle !important;
-}
-
-.pdf-transaction-table th {
-  font-size: 10px !important;
-  font-weight: bold !important;
-}
+/* =========================================
+   PDFでは「部費状況」を削除
+   ========================================= */
 
 `;
 
   clonedDoc.head.appendChild(style);
+
+  /* PDFだけ「部費状況」を削除 */
+  const feeElement =
+    clonedDoc.getElementById("summaryFeeExpected");
+
+  const feeCard =
+    feeElement?.closest(".summary-card");
+
+  if (feeCard) {
+    feeCard.remove();
+  }
+
+}
 
   // PDFのコピー側だけ「部費状況」を削除
   const feeElement =
@@ -3844,7 +3846,7 @@ color: #202833 !important;
       const pageWidth = 210;
       const pageHeight = 297;
 
-      const margin = 7;
+      const margin = 5;
 
       const usableWidth = pageWidth - margin * 2;
 
