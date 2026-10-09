@@ -1,3 +1,4 @@
+
 // ==============================
 // Supabase
 // ==============================
@@ -22,8 +23,11 @@ const supabaseClient =
 let currentUser = null;
 let currentRole = null;
 
-let currentYear = 2026;
-let currentMonth = 9;
+// 現在年月
+const now = new Date();
+
+let currentYear = now.getFullYear();
+let currentMonth = now.getMonth() + 1;
 
 let transactions = [];
 let categories = [];
@@ -3557,21 +3561,24 @@ async function exportPDF() {
                   "style"
                 );
 
-              style.textContent = `
+style.textContent = `
 
 /* =========================================
-   PDF全体
+   PDF専用レイアウト
    ========================================= */
 
+/* PDF全体 */
 #summarySection {
   width: 760px !important;
   max-width: 760px !important;
 
+  height: auto !important;
+  min-height: 0 !important;
+
   box-sizing: border-box !important;
 
   margin: 0 !important;
-
-  padding: 8px 8px 6px 8px !important;
+  padding: 6px 8px 8px 8px !important;
 
   background: #ffffff !important;
 }
@@ -3582,16 +3589,13 @@ async function exportPDF() {
    ========================================= */
 
 #summarySection h2 {
-  font-size: 25px !important;
+  font-size: 22px !important;
+  line-height: 1.1 !important;
 
-  line-height: 1.15 !important;
+  margin: 0 0 7px 0 !important;
+  padding: 0 0 4px 0 !important;
 
-  margin: 0 0 10px 0 !important;
-
-  padding: 0 0 5px 0 !important;
-
-  border-bottom:
-    2px solid #9aa4ae !important;
+  border-bottom: 2px solid #9aa4ae !important;
 }
 
 
@@ -3603,22 +3607,21 @@ async function exportPDF() {
 
   display: grid !important;
 
-  grid-template-columns:
-    1fr 1fr !important;
+  grid-template-columns: 1fr 1fr !important;
 
-  grid-template-rows:
-    auto auto !important;
+  grid-template-rows: auto auto !important;
 
   width: 100% !important;
 
+  height: auto !important;
+  min-height: 0 !important;
+
   box-sizing: border-box !important;
 
-  column-gap: 10px !important;
-
-  row-gap: 10px !important;
+  column-gap: 8px !important;
+  row-gap: 8px !important;
 
   margin: 0 !important;
-
   padding: 0 !important;
 
   align-items: stretch !important;
@@ -3633,20 +3636,21 @@ async function exportPDF() {
 
   box-sizing: border-box !important;
 
-  border:
-    1px solid #aeb8c2 !important;
+  border: 1px solid #aeb8c2 !important;
 
-  border-radius: 5px !important;
+  border-radius: 4px !important;
 
   background: #f7f9fb !important;
 
-  padding: 10px 12px !important;
+  padding: 7px 9px !important;
 
   margin: 0 !important;
 
   box-shadow: none !important;
 
   min-height: 0 !important;
+
+  height: auto !important;
 }
 
 
@@ -3654,24 +3658,19 @@ async function exportPDF() {
    月間収支
    ========================================= */
 
-#summaryContent
-.summary-card:has(#summaryBalance) {
+#summaryContent .summary-card:has(#summaryBalance) {
 
   grid-column: 1 !important;
 
-  grid-row:
-    1 / span 2 !important;
+  grid-row: 1 / span 2 !important;
 
-  min-height:
-    155px !important;
+  min-height: 105px !important;
 }
 
 
 /* 月間収支内の収入内訳は非表示 */
-
-#summaryContent
-.summary-card:has(#summaryBalance)
-#summaryIncomeBreakdown {
+#summaryContent .summary-card:has(#summaryBalance)
+  #summaryIncomeBreakdown {
 
   display: none !important;
 }
@@ -3681,8 +3680,7 @@ async function exportPDF() {
    収入の内訳
    ========================================= */
 
-#summaryContent
-.summary-card:has(#summaryIncomeBreakdown) {
+#summaryContent .summary-card:has(#summaryIncomeBreakdown) {
 
   grid-column: 2 !important;
 
@@ -3694,8 +3692,7 @@ async function exportPDF() {
    支出の分類
    ========================================= */
 
-#summaryContent
-.summary-card:has(#summaryExpenseBreakdown) {
+#summaryContent .summary-card:has(#summaryExpenseBreakdown) {
 
   grid-column: 2 !important;
 
@@ -3707,17 +3704,13 @@ async function exportPDF() {
    カード見出し
    ========================================= */
 
-#summaryContent
-.summary-card h3 {
+#summaryContent .summary-card h3 {
 
-  font-size: 14px !important;
+  font-size: 12px !important;
 
-  font-weight: 700 !important;
+  line-height: 1.15 !important;
 
-  line-height: 1.2 !important;
-
-  margin:
-    0 0 6px 0 !important;
+  margin: 0 0 4px 0 !important;
 
   padding: 0 !important;
 }
@@ -3727,25 +3720,21 @@ async function exportPDF() {
    集計行
    ========================================= */
 
-#summaryContent
-.summary-row {
+#summaryContent .summary-row {
 
-  font-size: 11px !important;
+  font-size: 9.5px !important;
 
-  line-height: 1.25 !important;
+  line-height: 1.15 !important;
 
-  padding: 2px 0 !important;
+  padding: 1px 0 !important;
 
   margin: 0 !important;
 }
 
 
-/* 金額 */
+#summaryContent .summary-row strong {
 
-#summaryContent
-.summary-row strong {
-
-  font-size: 11px !important;
+  font-size: 9.5px !important;
 }
 
 
@@ -3753,26 +3742,23 @@ async function exportPDF() {
    今月残高
    ========================================= */
 
-#summaryContent
-.summary-total {
+#summaryContent .summary-total {
 
-  font-size: 14px !important;
+  font-size: 11px !important;
 
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
 
-  margin-top: 7px !important;
+  margin-top: 4px !important;
 
-  padding-top: 6px !important;
+  padding-top: 4px !important;
 
-  border-top:
-    1px solid #aeb8c2 !important;
+  border-top: 1px solid #aeb8c2 !important;
 }
 
 
-#summaryContent
-.summary-total strong {
+#summaryContent .summary-total strong {
 
-  font-size: 18px !important;
+  font-size: 15px !important;
 }
 
 
@@ -3784,10 +3770,11 @@ async function exportPDF() {
 
   width: 100% !important;
 
+  height: auto !important;
+
   box-sizing: border-box !important;
 
-  margin:
-    12px 0 0 0 !important;
+  margin: 8px 0 0 0 !important;
 
   padding: 0 !important;
 }
@@ -3797,21 +3784,20 @@ async function exportPDF() {
 
 #pdfTransactionSection h3 {
 
-  font-size: 18px !important;
+  font-size: 15px !important;
 
   font-weight: 700 !important;
 
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
 
-  margin:
-    0 0 5px 0 !important;
+  margin: 0 0 4px 0 !important;
 
   padding: 0 !important;
 }
 
 
 /* =========================================
-   表
+   収支明細テーブル
    ========================================= */
 
 .pdf-transaction-table {
@@ -3820,66 +3806,50 @@ async function exportPDF() {
 
   table-layout: fixed !important;
 
-  border-collapse:
-    collapse !important;
+  border-collapse: collapse !important;
 
-  box-sizing:
-    border-box !important;
+  box-sizing: border-box !important;
 
-  font-size:
-    10.5px !important;
+  font-size: 10px !important;
 }
 
 
-/* 表セル */
+/* セル */
 
 .pdf-transaction-table th,
 .pdf-transaction-table td {
 
-  box-sizing:
-    border-box !important;
+  box-sizing: border-box !important;
 
-  border:
-    1px solid #aeb8c2 !important;
+  border: 1px solid #aeb8c2 !important;
 
-  padding:
-    3px 4px !important;
+  padding: 3px 4px !important;
 
-  font-size:
-    10.5px !important;
+  font-size: 10px !important;
 
-  line-height:
-    1.15 !important;
+  line-height: 1.1 !important;
 
-  height:
-    18px !important;
+  height: 18px !important;
 
-  vertical-align:
-    middle !important;
+  vertical-align: middle !important;
 
-  overflow-wrap:
-    anywhere !important;
+  overflow-wrap: anywhere !important;
 }
 
 
-/* 表ヘッダー */
+/* ヘッダー */
 
 .pdf-transaction-table th {
 
-  background:
-    #e8edf2 !important;
+  background: #e8edf2 !important;
 
-  color:
-    #202833 !important;
+  color: #202833 !important;
 
-  font-weight:
-    700 !important;
+  font-weight: 700 !important;
 
-  padding-top:
-    4px !important;
+  padding-top: 4px !important;
 
-  padding-bottom:
-    4px !important;
+  padding-bottom: 4px !important;
 }
 
 
@@ -3890,21 +3860,21 @@ async function exportPDF() {
 .pdf-transaction-table th:nth-child(1),
 .pdf-transaction-table td:nth-child(1) {
 
-  width: 9% !important;
+  width: 8% !important;
 }
 
 
 .pdf-transaction-table th:nth-child(2),
 .pdf-transaction-table td:nth-child(2) {
 
-  width: 16% !important;
+  width: 15% !important;
 }
 
 
 .pdf-transaction-table th:nth-child(3),
 .pdf-transaction-table td:nth-child(3) {
 
-  width: 39% !important;
+  width: 41% !important;
 }
 
 
@@ -3927,6 +3897,11 @@ async function exportPDF() {
 
   width: 12% !important;
 }
+
+
+/* =========================================
+   PDFでは「部費状況」を非表示
+   ========================================= */
 
 `;
 
