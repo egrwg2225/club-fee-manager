@@ -610,35 +610,27 @@ function isAutoMemberFeeIncome(
 // ==============================
 
 function setupMonthButtons() {
+  const prev = document.getElementById("prevMonth");
+  const next = document.getElementById("nextMonth");
 
-  const prev =
-    document.getElementById(
-      "prevMonth"
-    );
-
-  const next =
-    document.getElementById(
-      "nextMonth"
-    );
+  console.log("月移動ボタン確認", {
+    prev: !!prev,
+    next: !!next
+  });
 
   if (prev) {
-
-    prev.addEventListener(
-      "click",
-      () => changeMonth(-1)
-    );
-
+    prev.addEventListener("click", () => {
+      console.log("前月ボタンが押されました");
+      changeMonth(-1);
+    });
   }
 
   if (next) {
-
-    next.addEventListener(
-      "click",
-      () => changeMonth(1)
-    );
-
+    next.addEventListener("click", () => {
+      console.log("次月ボタンが押されました");
+      changeMonth(1);
+    });
   }
-
 }
 
 
