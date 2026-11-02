@@ -3964,7 +3964,7 @@ style.textContent = `
       297;
 
     const margin =
-      12;
+      25;
 
     const usableWidth =
       pageWidth -
