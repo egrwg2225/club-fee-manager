@@ -3524,7 +3524,7 @@ async function exportPDF() {
 
 
     // 古いPDF明細があれば削除してから作成
-    createPDFTransactionTable();
+    await createPDFTransactionTable();
 
 
     // ブラウザに描画させる
@@ -3964,7 +3964,7 @@ style.textContent = `
       297;
 
     const margin =
-      5;
+      12;
 
     const usableWidth =
       pageWidth -
@@ -4106,284 +4106,207 @@ style.textContent = `
 // PDF収支明細
 // ==============================
 
-function createPDFTransactionTable() {
+
+async function createPDFTransactionTable() {
 
   const summarySection =
-    document.getElementById(
-      "summarySection"
-    );
+    document.getElementById("summarySection");
 
   if (!summarySection) return;
 
-
   const oldTable =
-    document.getElementById(
-      "pdfTransactionSection"
-    );
+    document.getElementById("pdfTransactionSection");
 
   if (oldTable) {
-
     oldTable.remove();
-
   }
 
+  // 前月繰越を取得
+  const carryOver =
+    await getPreviousMonthBalance();
+
+  // 部費自動反映がONの場合は支払済部費を取得
+  let memberFeeIncome = 0;
+
+  if (isAutoMemberFeeIncome()) {
+    memberFeeIncome =
+      await getPaidMemberFeesTotal(getYearMonth());
+  }
+
+  // 明細を日付順に並べる
+  const rows = [...transactions].sort((a, b) => {
+    const dateCompare =
+      (a.date || "").localeCompare(b.date || "");
+
+    if (dateCompare !== 0) return dateCompare;
+
+    return (a.created_at || "").localeCompare(
+      b.created_at || ""
+    );
+  });
 
   const section =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   section.id =
     "pdfTransactionSection";
 
-
   const title =
-    document.createElement(
-      "h3"
-    );
+    document.createElement("h3");
 
   title.textContent =
     "収支明細";
 
-  section.appendChild(
-    title
-  );
+  section.appendChild(title);
 
+  const table =
+    document.createElement("table");
 
-  if (
-    !transactions ||
-    transactions.length === 0
+  table.className =
+    "pdf-transaction-table";
+
+  // 見出し
+  const thead =
+    document.createElement("thead");
+
+  const headerRow =
+    document.createElement("tr");
+
+  [
+    "日付",
+    "分類",
+    "内訳",
+    "収入",
+    "支出",
+    "収支小計"
+  ].forEach(text => {
+    const th =
+      document.createElement("th");
+
+    th.textContent = text;
+    headerRow.appendChild(th);
+  });
+
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody =
+    document.createElement("tbody");
+
+  // 小計は前月繰越から開始
+  let runningBalance = carryOver;
+
+  // 明細行を作成する関数
+  function addPDFRow(
+    date,
+    category,
+    detail,
+    income,
+    expense
   ) {
 
-    const empty =
-      document.createElement(
-        "div"
-      );
+    income = Number(income) || 0;
+    expense = Number(expense) || 0;
 
-    empty.textContent =
-      "収支明細はありません。";
+    runningBalance += income - expense;
 
-    empty.className =
-      "pdf-empty";
+    const tr =
+      document.createElement("tr");
 
-    section.appendChild(
-      empty
-    );
+    const values = [
+      date,
+      category,
+      detail,
+      income > 0 ? formatYen(income) : "",
+      expense > 0 ? formatYen(expense) : "",
+      formatYen(runningBalance)
+    ];
 
-  } else {
+    values.forEach((value, index) => {
+      const td =
+        document.createElement("td");
 
-    const table =
-      document.createElement(
-        "table"
-      );
+      td.textContent = value;
 
-    table.className =
-      "pdf-transaction-table";
-
-
-    const thead =
-      document.createElement(
-        "thead"
-      );
-
-    const headerRow =
-      document.createElement(
-        "tr"
-      );
-
-
-    [
-      "日付",
-      "分類",
-      "内訳",
-      "収入",
-      "支出",
-      "メモ"
-    ].forEach(
-      text => {
-
-        const th =
-          document.createElement(
-            "th"
-          );
-
-        th.textContent =
-          text;
-
-        headerRow.appendChild(
-          th
-        );
-
+      if (index === 5) {
+        td.style.fontWeight = "bold";
       }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  }
+
+  // 前月繰越を最初に表示
+  addPDFRow(
+    "繰越",
+    "",
+    "前月繰越",
+    0,
+    0
+  );
+
+  // 通常の収支明細
+  rows.forEach(row => {
+
+    addPDFRow(
+      formatPDFDate(row.date),
+      row.category?.trim() || "未分類",
+      row.detail?.trim() || "",
+      row.income,
+      row.expense
     );
 
+  });
 
-    thead.appendChild(
-      headerRow
-    );
+  // 部費自動反映分を最後に追加
+  if (memberFeeIncome > 0) {
 
-    table.appendChild(
-      thead
-    );
-
-
-    const tbody =
-      document.createElement(
-        "tbody"
-      );
-
-
-    transactions.forEach(
-      row => {
-
-        const tr =
-          document.createElement(
-            "tr"
-          );
-
-
-        const dateTd =
-          document.createElement(
-            "td"
-          );
-
-        dateTd.textContent =
-          formatPDFDate(
-            row.date
-          );
-
-
-        const categoryTd =
-          document.createElement(
-            "td"
-          );
-
-        categoryTd.textContent =
-          row.category?.trim() ||
-          "未分類";
-
-
-        const detailTd =
-          document.createElement(
-            "td"
-          );
-
-        detailTd.textContent =
-          row.detail?.trim() ||
-          "";
-
-
-        const incomeTd =
-          document.createElement(
-            "td"
-          );
-
-        const income =
-          Number(
-            row.income
-          ) || 0;
-
-        incomeTd.textContent =
-          income > 0
-            ? formatYen(
-                income
-              )
-            : "";
-
-
-        const expenseTd =
-          document.createElement(
-            "td"
-          );
-
-        const expense =
-          Number(
-            row.expense
-          ) || 0;
-
-        expenseTd.textContent =
-          expense > 0
-            ? formatYen(
-                expense
-              )
-            : "";
-
-
-        const memoTd =
-          document.createElement(
-            "td"
-          );
-
-        memoTd.textContent =
-          row.memo?.trim() ||
-          "";
-
-
-        tr.appendChild(
-          dateTd
-        );
-
-        tr.appendChild(
-          categoryTd
-        );
-
-        tr.appendChild(
-          detailTd
-        );
-
-        tr.appendChild(
-          incomeTd
-        );
-
-        tr.appendChild(
-          expenseTd
-        );
-
-        tr.appendChild(
-          memoTd
-        );
-
-
-        tbody.appendChild(
-          tr
-        );
-
-      }
-    );
-
-
-    table.appendChild(
-      tbody
-    );
-
-    section.appendChild(
-      table
+    addPDFRow(
+      "月内",
+      "部費",
+      "支払済部費（自動反映）",
+      memberFeeIncome,
+      0
     );
 
   }
 
+  // 明細がない場合
+  if (
+    rows.length === 0 &&
+    memberFeeIncome === 0
+  ) {
+
+    const tr =
+      document.createElement("tr");
+
+    const td =
+      document.createElement("td");
+
+    td.colSpan = 6;
+    td.textContent = "収支明細はありません。";
+
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+
+  }
+
+  table.appendChild(tbody);
+  section.appendChild(table);
 
   const summaryContent =
-    document.getElementById(
-      "summaryContent"
-    );
-
+    document.getElementById("summaryContent");
 
   if (summaryContent) {
-
-    summaryContent.after(
-      section
-    );
-
+    summaryContent.after(section);
   } else {
-
-    summarySection.appendChild(
-      section
-    );
-
+    summarySection.appendChild(section);
   }
 
 }
+
 
 
 // ==============================
